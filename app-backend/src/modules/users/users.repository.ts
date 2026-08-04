@@ -4,7 +4,7 @@ export const usersRepository = {
   async getById(userId: string) {
     const result = await db.query(
       `select id, name, email, avatar, provider, created_at as "createdAt"
-       from users where id = $1`,
+       from profiles where id = $1`,
       [userId],
     );
     const row = result.rows[0];

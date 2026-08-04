@@ -81,14 +81,13 @@ export const authService = {
     return session;
   },
 
-  async signOut(): Promise<void> {
-    if (!env.useMocks) {
-      const session = sessionStorageService.read();
+  async signOut(refreshToken?: string): Promise<void> {
+    if (!env.useMocks && refreshToken) {
       await apiClient.post(
         API_ROUTES.auth.logout,
-        session?.refreshToken ? { refreshToken: session.refreshToken } : undefined,
+        { refreshToken },
         {
-        headers: sessionStorageService.authHeader(),
+          headers: sessionStorageService.authHeader(),
         },
       );
     }

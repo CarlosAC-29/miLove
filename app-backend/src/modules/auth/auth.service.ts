@@ -1,12 +1,9 @@
-import jwt from "jsonwebtoken";
-import { env } from "../../config/env.js";
 import { HttpError } from "../../shared/errors/http-error.js";
-import { hashPassword, verifyPassword } from "../../shared/utils/password.js";
-import { hashToken, signAccessToken, signRefreshToken } from "../../shared/utils/token.js";
-import { authRepository, type DbUser } from "./auth.repository.js";
+import { authRepository, type DbProfile } from "./auth.repository.js";
+import { supabaseAdmin, supabaseAuth } from "../../infrastructure/supabase/client.js";
 import type { AuthSessionDto, UserDto } from "./auth.types.js";
 
-function mapUser(user: DbUser): UserDto {
+function mapUser(user: DbProfile): UserDto {
   return {
     id: user.id,
     name: user.name,
@@ -17,119 +14,143 @@ function mapUser(user: DbUser): UserDto {
   };
 }
 
-function expiresAtFromSeconds(seconds: number) {
-  return new Date(Date.now() + seconds * 1000).toISOString();
-}
-
-async function createSession(user: DbUser): Promise<AuthSessionDto> {
-  const accessToken = signAccessToken(user.id);
-  const refreshToken = signRefreshToken(user.id);
-  const decoded = jwt.decode(accessToken) as { exp?: number } | null;
-  const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : expiresAtFromSeconds(3600);
-
-  const refreshDecoded = jwt.decode(refreshToken) as { exp?: number } | null;
-  const refreshExpiry = new Date((refreshDecoded?.exp ?? Math.floor(Date.now() / 1000) + 86400 * 30) * 1000);
-  await authRepository.insertRefreshToken({
-    userId: user.id,
-    tokenHash: hashToken(refreshToken),
-    expiresAt: refreshExpiry,
-  });
-
+function toAuthSession(
+  user: DbProfile,
+  session: { access_token: string; refresh_token: string; expires_in: number },
+): AuthSessionDto {
   return {
     user: mapUser(user),
-    accessToken,
-    refreshToken,
-    expiresAt,
+    accessToken: session.access_token,
+    refreshToken: session.refresh_token,
+    expiresAt: new Date(Date.now() + session.expires_in * 1000).toISOString(),
   };
+}
+
+async function ensureProfile(input: {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  provider: "google" | "apple" | "email";
+  providerExternalId?: string;
+}): Promise<DbProfile> {
+  return authRepository.upsertProfile(input);
 }
 
 export const authService = {
   async register(input: { name: string; email: string; password: string }) {
-    const existing = await authRepository.findUserByEmail(input.email.toLowerCase());
-    if (existing) throw new HttpError(409, "Email is already registered.");
-
-    const passwordHash = await hashPassword(input.password);
-    const user = await authRepository.createEmailUser({
-      name: input.name,
-      email: input.email.toLowerCase(),
-      passwordHash,
+    const email = input.email.toLowerCase();
+    const { data, error } = await supabaseAuth.auth.signUp({
+      email,
+      password: input.password,
+      options: { data: { name: input.name } },
     });
-    return createSession(user);
+    if (error) {
+      throw new HttpError(400, error.message);
+    }
+    if (!data.user) {
+      throw new HttpError(500, "Unable to create user.");
+    }
+
+    const profile = await ensureProfile({
+      id: data.user.id,
+      name: input.name,
+      email,
+      provider: "email",
+    });
+
+    if (data.session) {
+      return toAuthSession(profile, data.session);
+    }
+
+    const login = await supabaseAuth.auth.signInWithPassword({ email, password: input.password });
+    if (login.error || !login.data.session) {
+      throw new HttpError(500, login.error?.message ?? "Unable to start session.");
+    }
+    return toAuthSession(profile, login.data.session);
   },
 
   async login(input: { email: string; password: string }) {
-    const user = await authRepository.findUserByEmail(input.email.toLowerCase());
-    if (!user || !user.password_hash) throw new HttpError(401, "Invalid credentials.");
+    const email = input.email.toLowerCase();
+    const { data, error } = await supabaseAuth.auth.signInWithPassword({
+      email,
+      password: input.password,
+    });
+    if (error || !data.user || !data.session) {
+      throw new HttpError(401, error?.message ?? "Invalid credentials.");
+    }
 
-    const isValid = await verifyPassword(input.password, user.password_hash);
-    if (!isValid) throw new HttpError(401, "Invalid credentials.");
-
-    return createSession(user);
+    const profile = await ensureProfile({
+      id: data.user.id,
+      name: (data.user.user_metadata["name"] as string | undefined) ?? data.user.email ?? "Usuario",
+      email: data.user.email ?? email,
+      avatar: data.user.user_metadata["avatar"] as string | undefined,
+      provider: (data.user.app_metadata["provider"] as "google" | "apple" | "email") ?? "email",
+    });
+    return toAuthSession(profile, data.session);
   },
 
   async getSession(userId: string) {
-    const user = await authRepository.findUserById(userId);
-    if (!user) throw new HttpError(404, "User not found.");
-    return { user: mapUser(user) };
+    const profile = await authRepository.findProfileById(userId);
+    if (!profile) throw new HttpError(404, "User not found.");
+    return { user: mapUser(profile) };
   },
 
   async refresh(refreshToken: string) {
-    let payload: { sub: string };
-    try {
-      payload = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { sub: string };
-    } catch {
-      throw new HttpError(401, "Invalid refresh token.");
+    const { data, error } = await supabaseAuth.auth.refreshSession({ refresh_token: refreshToken });
+    if (error || !data.session || !data.user) {
+      throw new HttpError(401, error?.message ?? "Invalid refresh token.");
     }
 
-    const tokenHash = hashToken(refreshToken);
-    const tokenRow = await authRepository.findRefreshToken({ userId: payload.sub, tokenHash });
-    if (!tokenRow || tokenRow.revoked_at || tokenRow.expires_at < new Date()) {
-      throw new HttpError(401, "Refresh token is revoked or expired.");
-    }
-
-    await authRepository.revokeRefreshToken(tokenHash);
-    const user = await authRepository.findUserById(payload.sub);
-    if (!user) throw new HttpError(404, "User not found.");
-    return createSession(user);
+    const profile = await ensureProfile({
+      id: data.user.id,
+      name: (data.user.user_metadata["name"] as string | undefined) ?? data.user.email ?? "Usuario",
+      email: data.user.email ?? "",
+      avatar: data.user.user_metadata["avatar"] as string | undefined,
+      provider: (data.user.app_metadata["provider"] as "google" | "apple" | "email") ?? "email",
+    });
+    return toAuthSession(profile, data.session);
   },
 
-  async logout(refreshToken?: string) {
-    if (!refreshToken) return;
-    await authRepository.revokeRefreshToken(hashToken(refreshToken));
+  async logout() {
+    return;
   },
 
   async oauthGoogle(idToken: string) {
-    const providerExternalId = `google-${idToken.slice(0, 24)}`;
-    const email = `google_${providerExternalId}@milove.oauth.local`;
-    const name = "Google User";
-
-    let user = await authRepository.findUserByProvider("google", providerExternalId);
-    if (!user) {
-      user = await authRepository.createSocialUser({
-        name,
-        email,
-        provider: "google",
-        providerExternalId,
-        avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-      });
+    const { data, error } = await supabaseAuth.auth.signInWithIdToken({
+      provider: "google",
+      token: idToken,
+    });
+    if (error || !data.user || !data.session) {
+      throw new HttpError(401, error?.message ?? "Unable to authenticate with Google.");
     }
-    return createSession(user);
+    const profile = await ensureProfile({
+      id: data.user.id,
+      name: (data.user.user_metadata["name"] as string | undefined) ?? data.user.email ?? "Google User",
+      email: data.user.email ?? "",
+      avatar: data.user.user_metadata["avatar_url"] as string | undefined,
+      provider: "google",
+      providerExternalId: data.user.user_metadata["provider_id"] as string | undefined,
+    });
+    return toAuthSession(profile, data.session);
   },
 
   async oauthApple(identityToken: string) {
-    const providerExternalId = `apple-${identityToken.slice(0, 24)}`;
-    const email = `${providerExternalId}@privaterelay.appleid.com`;
-    const name = "Apple User";
-
-    let user = await authRepository.findUserByProvider("apple", providerExternalId);
-    if (!user) {
-      user = await authRepository.createSocialUser({
-        name,
-        email,
-        provider: "apple",
-        providerExternalId,
-      });
+    const { data, error } = await supabaseAuth.auth.signInWithIdToken({
+      provider: "apple",
+      token: identityToken,
+    });
+    if (error || !data.user || !data.session) {
+      throw new HttpError(401, error?.message ?? "Unable to authenticate with Apple.");
     }
-    return createSession(user);
+    const profile = await ensureProfile({
+      id: data.user.id,
+      name: (data.user.user_metadata["name"] as string | undefined) ?? data.user.email ?? "Apple User",
+      email: data.user.email ?? "",
+      avatar: data.user.user_metadata["avatar_url"] as string | undefined,
+      provider: "apple",
+      providerExternalId: data.user.user_metadata["provider_id"] as string | undefined,
+    });
+    return toAuthSession(profile, data.session);
   },
 };

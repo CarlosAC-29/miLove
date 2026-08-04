@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoonPage } from "@/pages/ComingSoon/ComingSoonPage";
+import { DatesPage } from "@/pages/Dates/DatesPage";
 
 export const Route = createFileRoute("/dates")({
   head: () => ({
@@ -10,5 +10,5 @@ export const Route = createFileRoute("/dates")({
       { property: "og:description", content: "Ideas y próximos planes juntos en MiLove, la app para parejas." },
     ],
   }),
-  component: () => <ComingSoonPage title="Citas" subtitle="Ideas y próximos planes juntos" />,
+  component: DatesPage,
 });

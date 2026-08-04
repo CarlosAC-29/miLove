@@ -21,7 +21,7 @@ export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
       theme: "system",
-      coupleName: "Ana & Leo",
+      coupleName: "Carlos & Laura",
       monthlyBudget: 2_400_000,
       setTheme: (theme) => set({ theme }),
       setCoupleName: (coupleName) => set({ coupleName }),

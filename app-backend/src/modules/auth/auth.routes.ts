@@ -5,6 +5,10 @@ import { authController } from "./auth.controller.js";
 
 const router = Router();
 
+// Dev-only helper to quickly obtain an access token using email+password.
+// POST /auth/token { email, password } -> { accessToken }
+router.post("/token", asyncHandler(authController.token));
+
 router.post("/register", asyncHandler(authController.register));
 router.post("/login", asyncHandler(authController.login));
 router.get("/session", authMiddleware, asyncHandler(authController.session));

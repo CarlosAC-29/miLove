@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { env } from "../../config/env.js";
+import { supabaseAuth } from "../../infrastructure/supabase/client.js";
 import { HttpError } from "../errors/http-error.js";
 
 export interface AuthPayload {
@@ -22,11 +21,17 @@ export function authMiddleware(request: Request, _response: Response, next: Next
   }
 
   const token = header.slice("Bearer ".length);
-  try {
-    const payload = jwt.verify(token, env.JWT_SECRET) as AuthPayload;
-    request.auth = { sub: payload.sub };
-    next();
-  } catch {
-    throw new HttpError(401, "Invalid authorization token.");
-  }
+  void supabaseAuth.auth
+    .getUser(token)
+    .then(({ data, error }) => {
+      if (error || !data.user) {
+        next(new HttpError(401, "Invalid authorization token."));
+        return;
+      }
+      request.auth = { sub: data.user.id };
+      next();
+    })
+    .catch(() => {
+      next(new HttpError(401, "Invalid authorization token."));
+    });
 }

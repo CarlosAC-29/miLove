@@ -9,7 +9,31 @@ import { appRoutes } from "./routes.js";
 export const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN === "*" ? true : env.CORS_ORIGIN, credentials: true }));
+const normalizeOrigin = (origin: string): string => origin.replace(/\/+$/, "");
+const configuredOrigins = env.CORS_ORIGIN.split(",")
+  .map((origin) => normalizeOrigin(origin.trim()))
+  .filter((origin) => origin.length > 0);
+const allowAnyOrigin = configuredOrigins.includes("*");
+
+app.use(
+  cors({
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin || allowAnyOrigin) {
+        callback(null, true);
+        return;
+      }
+
+      const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+      if (configuredOrigins.includes(normalizedRequestOrigin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS origin not allowed: ${requestOrigin}`));
+    },
+    credentials: true,
+  }),
+);
 app.use(morgan("dev"));
 app.use(express.json());
 

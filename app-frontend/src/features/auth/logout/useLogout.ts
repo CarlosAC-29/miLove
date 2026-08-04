@@ -7,8 +7,11 @@ export function useLogout() {
   const logout = useAuthStore((state) => state.logout);
 
   const performLogout = async () => {
-    await logout();
-    await navigate({ to: "/login" });
+    try {
+      await logout();
+    } finally {
+      await navigate({ to: "/login", replace: true });
+    }
   };
 
   return { isLoading, performLogout };

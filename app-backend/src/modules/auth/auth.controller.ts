@@ -34,8 +34,8 @@ export const authController = {
   },
 
   async logout(request: Request, response: Response) {
-    const body = request.body as { refreshToken?: string };
-    await authService.logout(body?.refreshToken);
+    void request.body;
+    await authService.logout();
     return response.status(204).send();
   },
 
@@ -49,5 +49,18 @@ export const authController = {
     const body = appleOAuthSchema.parse(request.body);
     const session = await authService.oauthApple(body.identityToken);
     return response.json(session);
+  },
+
+  // Dev helper: exchange email+password for a short-lived access token only.
+  // This endpoint is intentionally available only in development to avoid exposing
+  // credentials in production. It validates the same login schema and returns
+  // { accessToken }.
+  async token(request: Request, response: Response) {
+    if (process.env.NODE_ENV !== "development") {
+      return response.status(403).json({ message: "Forbidden" });
+    }
+    const body = loginSchema.parse(request.body);
+    const session = await authService.login(body);
+    return response.json({ accessToken: session.accessToken });
   },
 };

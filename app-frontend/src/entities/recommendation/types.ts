@@ -3,7 +3,7 @@ export interface AiRecommendationDto {
   id: string;
   title: string;
   message: string;
-  module: string;
+  module?: string;
   createdAt: string;
 }
 
@@ -12,10 +12,52 @@ export interface AiRecommendation {
   readonly id: string;
   readonly title: string;
   readonly message: string;
-  readonly module: string;
+  readonly module?: string;
   readonly createdAt: string;
 }
 
 export function mapAiRecommendation(dto: AiRecommendationDto): AiRecommendation {
   return { ...dto };
+}
+
+export type SuggestionCategory = "date" | "restaurant" | "activity" | "gift" | "trip";
+export type SuggestionStatus = "all" | "accepted" | "pending";
+
+export interface RecommendationContextDto {
+  id: string;
+  context: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecommendationSuggestionDto {
+  id: string;
+  contextId: string;
+  category: SuggestionCategory;
+  title: string;
+  message: string;
+  accepted: boolean;
+  acceptedAt?: string;
+  createdAt: string;
+}
+
+export interface RecommendationContextStateDto {
+  context: RecommendationContextDto | null;
+  suggestions: {
+    total: number;
+    accepted: number;
+    pending: number;
+  };
+}
+
+export interface UpsertRecommendationContextInput {
+  context: string;
+}
+
+export interface GenerateSuggestionsInput {
+  context?: string;
+}
+
+export interface AcceptSuggestionsInput {
+  suggestionIds: string[];
 }

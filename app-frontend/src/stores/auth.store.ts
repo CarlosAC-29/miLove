@@ -24,7 +24,7 @@ function applySession(session: AuthSession | null) {
   };
 }
 
-export const useAuthStore = create<AuthState>((set) => {
+export const useAuthStore = create<AuthState>()((set, get) => {
   const restoredSession = authService.restoreSession();
 
   return {
@@ -79,12 +79,14 @@ export const useAuthStore = create<AuthState>((set) => {
     },
     logout: async () => {
       set({ isLoading: true });
+      const refreshToken = get().session?.refreshToken;
+      set({ ...applySession(null), isLoading: true });
       try {
-        await authService.signOut();
-        set({ ...applySession(null), isLoading: false });
+        await authService.signOut(refreshToken);
       } catch (error) {
-        set({ isLoading: false });
-        throw error;
+        console.error(error);
+      } finally {
+        set({ ...applySession(null), isLoading: false });
       }
     },
   };

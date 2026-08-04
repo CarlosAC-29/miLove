@@ -33,5 +33,11 @@ export const API_ROUTES = {
   dates: { list: "/dates", ideas: "/dates/ideas" },
   movies: { list: "/movies" },
   restaurants: { list: "/restaurants" },
-  recommendations: { ai: "/recommendations/ai" },
+  recommendations: {
+    ai: "/recommendations/ai",
+    context: "/recommendations/context",
+    suggestions: "/recommendations/suggestions",
+    generate: "/recommendations/suggestions/generate",
+    accept: "/recommendations/suggestions/accept",
+  },
 } as const;

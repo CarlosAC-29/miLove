@@ -1,6 +1,4 @@
 import { LoginForm } from "@/features/auth/login/LoginForm";
-import { AppleLoginButton } from "@/features/auth/social-login/AppleLoginButton";
-import { GoogleLoginButton } from "@/features/auth/social-login/GoogleLoginButton";
 import { SurfaceCard } from "@/shared/ui/SurfaceCard";
 
 export function LoginPage() {
@@ -16,17 +14,6 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground">
             Organiza tu vida, tus finanzas y tus momentos juntos.
           </p>
-        </div>
-
-        <div className="space-y-3">
-          <GoogleLoginButton />
-          <AppleLoginButton />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground">o</span>
-          <div className="h-px flex-1 bg-border" />
         </div>
 
         <LoginForm mode="login" />
