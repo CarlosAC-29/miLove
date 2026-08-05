@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import {
   acceptSuggestionsSchema,
+  deleteSuggestionsSchema,
   generateSuggestionsSchema,
   listSuggestionsQuerySchema,
   upsertContextSchema,
@@ -36,6 +37,12 @@ export const recommendationsController = {
   async acceptSuggestions(request: Request, response: Response) {
     const body = acceptSuggestionsSchema.parse(request.body);
     const data = await recommendationsService.acceptSuggestions(request.auth!.sub, body.suggestionIds);
+    return response.json(data);
+  },
+
+  async deleteSuggestions(request: Request, response: Response) {
+    const body = deleteSuggestionsSchema.parse(request.body);
+    const data = await recommendationsService.deleteSuggestions(request.auth!.sub, body.suggestionIds);
     return response.json(data);
   },
 

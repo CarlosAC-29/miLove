@@ -38,9 +38,12 @@ const SUGGESTIONS_KEY = ["recommendations", "suggestions"] as const;
 export function DatesPage() {
   const queryClient = useQueryClient();
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
+  const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
   const [contextDraft, setContextDraft] = useState("");
   const [contextError, setContextError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [draftSuggestions, setDraftSuggestions] = useState<Awaited<ReturnType<typeof aiService.generateSuggestions>>["suggestions"]>([]);
+  const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<string[]>([]);
 
   const contextQuery = useQuery({
     queryKey: CONTEXT_KEY,
@@ -64,6 +67,21 @@ export function DatesPage() {
 
   const generateMutation = useMutation({
     mutationFn: () => aiService.generateSuggestions(),
+    onSuccess: async (result) => {
+      setDraftSuggestions(result.suggestions);
+      setSelectedSuggestionIds([]);
+      setIsSuggestionsModalOpen(true);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: CONTEXT_KEY }),
+        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY }),
+      ]);
+      setActionError(null);
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  });
+
+  const acceptSuggestionsMutation = useMutation({
+    mutationFn: (suggestionIds: string[]) => aiService.acceptSuggestions({ suggestionIds }),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: CONTEXT_KEY }),
@@ -74,17 +92,21 @@ export function DatesPage() {
     onError: (error) => setActionError(getErrorMessage(error)),
   });
 
-  const acceptMutation = useMutation({
-    mutationFn: (suggestionId: string) => aiService.acceptSuggestions({ suggestionIds: [suggestionId] }),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: CONTEXT_KEY }),
-        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY }),
-      ]);
-      setActionError(null);
-    },
-    onError: (error) => setActionError(getErrorMessage(error)),
-  });
+  const deleteFromDraft = (suggestionId: string) => {
+    setDraftSuggestions((current) => current.filter((suggestion) => suggestion.id !== suggestionId));
+    setSelectedSuggestionIds((current) => current.filter((id) => id !== suggestionId));
+  };
+
+  const saveSuggestion = async (suggestionId: string) => {
+    await acceptSuggestionsMutation.mutateAsync([suggestionId]);
+    deleteFromDraft(suggestionId);
+  };
+
+  const toggleSelected = (suggestionId: string) => {
+    setSelectedSuggestionIds((current) =>
+      current.includes(suggestionId) ? current.filter((id) => id !== suggestionId) : [...current, suggestionId],
+    );
+  };
 
   useEffect(() => {
     const existingContext = contextQuery.data?.context?.context ?? "";
@@ -97,11 +119,6 @@ export function DatesPage() {
       setIsContextModalOpen(true);
     }
   }, [contextQuery.data?.context, contextQuery.isPending]);
-
-  const pendingSuggestions = useMemo(
-    () => (suggestionsQuery.data ?? []).filter((suggestion) => !suggestion.accepted),
-    [suggestionsQuery.data],
-  );
 
   const acceptedSuggestions = useMemo(
     () => (suggestionsQuery.data ?? []).filter((suggestion) => suggestion.accepted),
@@ -149,7 +166,7 @@ export function DatesPage() {
         <div className="mt-4 flex items-center gap-3">
           <Button
             type="button"
-            onClick={() => generateMutation.mutate()}
+            onClick={() => generateMutation.mutateAsync()}
             disabled={!contextQuery.data?.context || generateMutation.isPending}
           >
             {generateMutation.isPending ? "Generando..." : "Generar opciones"}
@@ -161,39 +178,6 @@ export function DatesPage() {
         </div>
         {actionError ? <p className="mt-3 text-xs text-destructive">{actionError}</p> : null}
       </SurfaceCard>
-
-      <div className="mt-6">
-        <SectionTitle>Opciones sugeridas</SectionTitle>
-        <div className="space-y-3">
-          {pendingSuggestions.length === 0 ? (
-            <SurfaceCard>
-              <p className="text-sm text-muted-foreground">
-                Aún no hay opciones pendientes. Genera opciones para empezar.
-              </p>
-            </SurfaceCard>
-          ) : (
-            pendingSuggestions.map((suggestion) => (
-              <SurfaceCard key={suggestion.id}>
-                <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  {suggestion.category}
-                </p>
-                <h3 className="mt-1 text-base">{suggestion.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{suggestion.message}</p>
-                <div className="mt-3">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => acceptMutation.mutate(suggestion.id)}
-                    disabled={acceptMutation.isPending}
-                  >
-                    Agregar esta opción
-                  </Button>
-                </div>
-              </SurfaceCard>
-            ))
-          )}
-        </div>
-      </div>
 
       <div className="mt-6">
         <SectionTitle>Opciones aceptadas</SectionTitle>
@@ -244,6 +228,108 @@ export function DatesPage() {
             <Button type="button" onClick={handleSaveContext} disabled={saveContextMutation.isPending}>
               {saveContextMutation.isPending ? "Guardando..." : "Guardar contexto"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isSuggestionsModalOpen}
+        onOpenChange={(open) => setIsSuggestionsModalOpen(open)}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Opciones generadas</DialogTitle>
+            <DialogDescription>
+              Selecciona cuáles quieres guardar o elimina las que no te interesen.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+            {draftSuggestions.length === 0 ? (
+              <SurfaceCard>
+                <p className="text-sm text-muted-foreground">No se generaron opciones.</p>
+              </SurfaceCard>
+            ) : (
+              draftSuggestions.map((suggestion) => {
+                const selected = selectedSuggestionIds.includes(suggestion.id);
+                return (
+                  <SurfaceCard key={suggestion.id}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                          {suggestion.category}
+                        </p>
+                        <h3 className="mt-1 text-base">{suggestion.title}</h3>
+                        <p className="mt-2 text-sm text-muted-foreground">{suggestion.message}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant={selected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleSelected(suggestion.id)}
+                      >
+                        {selected ? "Seleccionada" : "Marcar"}
+                      </Button>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => toggleSelected(suggestion.id)}
+                      >
+                        {selected ? "Quitar selección" : "Seleccionar"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => saveSuggestion(suggestion.id)}
+                        disabled={acceptSuggestionsMutation.isPending}
+                      >
+                        Guardar
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteFromDraft(suggestion.id)}
+                      >
+                        Borrar
+                      </Button>
+                    </div>
+                  </SurfaceCard>
+                );
+              })
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsSuggestionsModalOpen(false)}
+            >
+              Cerrar
+            </Button>
+            <Button
+                type="button"
+                onClick={async () => {
+                  const idsToSave =
+                    selectedSuggestionIds.length > 0
+                      ? selectedSuggestionIds
+                      : draftSuggestions.map((suggestion) => suggestion.id);
+                  if (idsToSave.length === 0) {
+                    setIsSuggestionsModalOpen(false);
+                    return;
+                  }
+                  await acceptSuggestionsMutation.mutateAsync(idsToSave);
+                  setDraftSuggestions((current) => current.filter((suggestion) => !idsToSave.includes(suggestion.id)));
+                  setSelectedSuggestionIds([]);
+                  setIsSuggestionsModalOpen(false);
+                }}
+                disabled={acceptSuggestionsMutation.isPending || draftSuggestions.length === 0}
+              >
+                Guardar seleccionadas
+              </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

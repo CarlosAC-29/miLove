@@ -105,6 +105,14 @@ export const recommendationsService = {
     return accepted.map(mapSuggestion);
   },
 
+  async deleteSuggestions(userId: string, suggestionIds: string[]) {
+    const deletedCount = await recommendationsRepository.deleteSuggestions(userId, suggestionIds);
+    if (deletedCount === 0) {
+      throw new HttpError(404, "No suggestions found for the provided ids.");
+    }
+    return { deletedCount };
+  },
+
   async listAiRecommendations(userId: string) {
     const suggestions = await recommendationsRepository.listSuggestions(userId, "all");
     return suggestions.map((suggestion) => ({

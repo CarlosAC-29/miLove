@@ -15,3 +15,7 @@ export const listSuggestionsQuerySchema = z
 export const acceptSuggestionsSchema = z.object({
   suggestionIds: z.array(z.string().uuid()).min(1),
 });
+
+export const deleteSuggestionsSchema = z.object({
+  suggestionIds: z.array(z.string().uuid()).min(1),
+});

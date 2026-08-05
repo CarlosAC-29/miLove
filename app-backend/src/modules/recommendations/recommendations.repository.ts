@@ -154,6 +154,16 @@ export const recommendationsRepository = {
     return result.rows;
   },
 
+  async deleteSuggestions(userId: string, suggestionIds: string[]): Promise<number> {
+    const result = await db.query<{ count: string }>(
+      `delete from recommendation_suggestions
+       where user_id = $1 and id = any($2::uuid[])
+       returning id`,
+      [userId, suggestionIds],
+    );
+    return result.rowCount ?? result.rows.length;
+  },
+
   async getSuggestionStats(userId: string): Promise<{ total: number; accepted: number; pending: number }> {
     const result = await db.query<{ total: string; accepted: string; pending: string }>(
       `select

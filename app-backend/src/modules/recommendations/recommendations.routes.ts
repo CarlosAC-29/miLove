@@ -11,6 +11,7 @@ router.put("/context", asyncHandler(recommendationsController.upsertContext));
 router.post("/suggestions/generate", asyncHandler(recommendationsController.generateSuggestions));
 router.get("/suggestions", asyncHandler(recommendationsController.listSuggestions));
 router.post("/suggestions/accept", asyncHandler(recommendationsController.acceptSuggestions));
+router.delete("/suggestions", asyncHandler(recommendationsController.deleteSuggestions));
 router.get("/ai", asyncHandler(recommendationsController.ai));
 
 export const recommendationsRoutes = router;
