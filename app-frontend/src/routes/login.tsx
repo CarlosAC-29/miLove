@@ -13,9 +13,9 @@ export const Route = createFileRoute("/login")({
       { title: "Iniciar sesion — MiLove" },
       {
         name: "description",
-        content: "Accede a MiLove con Google, Apple o email para entrar al dashboard privado.",
-      },
-    ],
+        content: "Accede a MiLove con Google, Apple o email para entrar al dashboard privado."
+      }
+    ]
   }),
-  component: LoginPage,
+  component: LoginPage
 });

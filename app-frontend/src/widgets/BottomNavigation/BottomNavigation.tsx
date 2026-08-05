@@ -7,7 +7,7 @@ const ITEMS = [
   { to: "/dates", label: "Citas", icon: Heart, exact: false },
   { to: "/gifts", label: "Regalos", icon: Gift, exact: false },
   { to: "/movies", label: "Cine", icon: Clapperboard, exact: false },
-  { to: "/profile", label: "Perfil", icon: UserRound, exact: false },
+  { to: "/profile", label: "Perfil", icon: UserRound, exact: false }
 ] as const;
 
 /** Barra de navegación inferior, estilo app nativa. */

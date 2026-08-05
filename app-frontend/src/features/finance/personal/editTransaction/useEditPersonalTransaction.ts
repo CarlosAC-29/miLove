@@ -7,7 +7,7 @@ export function useEditPersonalTransaction(onSuccess?: () => Promise<void> | voi
 
   const editPersonalTransaction = async (
     transactionId: string,
-    changes: Partial<Omit<CreateTransactionInput, "context">>,
+    changes: Partial<Omit<CreateTransactionInput, "context">>
   ) => {
     setIsSubmitting(true);
     try {

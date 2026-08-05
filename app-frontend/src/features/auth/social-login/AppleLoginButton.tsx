@@ -12,7 +12,9 @@ export function AppleLoginButton() {
     try {
       await continueWithApple();
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "No se pudo iniciar con Apple.");
+      setError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo iniciar con Apple."
+      );
     }
   };
 

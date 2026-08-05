@@ -7,7 +7,7 @@ export function useEditSharedExpense(onSuccess?: () => Promise<void> | void) {
 
   const editSharedExpense = async (
     transactionId: string,
-    changes: Partial<Omit<CreateTransactionInput, "context">>,
+    changes: Partial<Omit<CreateTransactionInput, "context">>
   ) => {
     setIsSubmitting(true);
     try {

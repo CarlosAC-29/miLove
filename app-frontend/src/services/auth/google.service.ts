@@ -25,7 +25,7 @@ export const googleAuthService = {
         email: "carlos.rivera@gmail.com",
         avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c",
         provider: "google",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
       return { user: mapUser(dto), accessToken: `mock.google.${dto.id}` };
     }
@@ -37,9 +37,9 @@ export const googleAuthService = {
       user: mapUser(response.user),
       accessToken: response.accessToken,
       ...(response.refreshToken ? { refreshToken: response.refreshToken } : {}),
-      ...(response.expiresAt ? { expiresAt: response.expiresAt } : {}),
+      ...(response.expiresAt ? { expiresAt: response.expiresAt } : {})
     };
-  },
+  }
 };
 
 async function requestGoogleIdToken(): Promise<string> {

@@ -9,9 +9,9 @@ export const Route = createFileRoute("/home")({
       { property: "og:title", content: "Home — MiLove" },
       {
         property: "og:description",
-        content: "Organiza finanzas, citas, regalos, peliculas y planes en pareja.",
-      },
-    ],
+        content: "Organiza finanzas, citas, regalos, peliculas y planes en pareja."
+      }
+    ]
   }),
-  component: HomePage,
+  component: HomePage
 });

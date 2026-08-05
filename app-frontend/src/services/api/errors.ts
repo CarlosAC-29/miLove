@@ -4,12 +4,7 @@ export class ApiError extends Error {
   readonly code: string;
   readonly details?: unknown;
 
-  constructor(params: {
-    message: string;
-    status: number;
-    code?: string;
-    details?: unknown;
-  }) {
+  constructor(params: { message: string; status: number; code?: string; details?: unknown }) {
     super(params.message);
     this.name = "ApiError";
     this.status = params.status;
@@ -26,6 +21,6 @@ export function toApiError(error: unknown): ApiError {
   return new ApiError({
     message: error instanceof Error ? error.message : "Error inesperado.",
     status: 0,
-    code: "network_error",
+    code: "network_error"
   });
 }

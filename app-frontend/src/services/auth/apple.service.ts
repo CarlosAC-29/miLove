@@ -24,20 +24,22 @@ export const appleAuthService = {
         name: "Carlos Rivera",
         email: "kx9f2m1p8t@privaterelay.appleid.com",
         provider: "apple",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
       return { user: mapUser(dto), accessToken: `mock.apple.${dto.id}` };
     }
 
     const identityToken = await requestAppleIdentityToken();
-    const response = await apiClient.post<AuthApiResponse>(API_ROUTES.auth.apple, { identityToken });
+    const response = await apiClient.post<AuthApiResponse>(API_ROUTES.auth.apple, {
+      identityToken
+    });
     return {
       user: mapUser(response.user),
       accessToken: response.accessToken,
       ...(response.refreshToken ? { refreshToken: response.refreshToken } : {}),
-      ...(response.expiresAt ? { expiresAt: response.expiresAt } : {}),
+      ...(response.expiresAt ? { expiresAt: response.expiresAt } : {})
     };
-  },
+  }
 };
 
 async function requestAppleIdentityToken(): Promise<string> {

@@ -15,7 +15,7 @@ export function useCreatePersonalBudget(onSuccess?: () => Promise<void> | void) 
     try {
       await financeService.createBudget({
         ...input,
-        context: "personal",
+        context: "personal"
       });
       await onSuccess?.();
     } finally {

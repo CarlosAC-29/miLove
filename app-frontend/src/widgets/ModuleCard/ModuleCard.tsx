@@ -7,7 +7,7 @@ const ACCENT_CLASSES: Record<ModuleDefinition["accent"], string> = {
   accent: "bg-accent/12 text-accent",
   success: "bg-success/12 text-success",
   "chart-4": "bg-chart-4/15 text-chart-4",
-  "chart-5": "bg-chart-5/15 text-chart-5",
+  "chart-5": "bg-chart-5/15 text-chart-5"
 };
 
 /** Tarjeta de acceso a un módulo. Presentacional: no contiene lógica de negocio. */
@@ -23,7 +23,7 @@ export function ModuleCard({ module, index = 0 }: { module: ModuleDefinition; in
       <span
         className={cn(
           "flex size-11 items-center justify-center rounded-2xl",
-          ACCENT_CLASSES[module.accent],
+          ACCENT_CLASSES[module.accent]
         )}
       >
         <Icon className="size-5" strokeWidth={2} />

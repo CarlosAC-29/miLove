@@ -6,8 +6,8 @@ export const apiConfig = {
   timeoutMs: env.apiTimeoutMs,
   defaultHeaders: {
     "Content-Type": "application/json",
-    Accept: "application/json",
-  } as Record<string, string>,
+    Accept: "application/json"
+  } as Record<string, string>
 };
 
 /** Rutas REST del backend futuro, centralizadas para evitar strings mágicos. */
@@ -19,7 +19,7 @@ export const API_ROUTES = {
     session: "/auth/session",
     refresh: "/auth/refresh",
     google: "/auth/oauth/google",
-    apple: "/auth/oauth/apple",
+    apple: "/auth/oauth/apple"
   },
   finance: {
     transactions: "/finance/transactions",
@@ -27,7 +27,7 @@ export const API_ROUTES = {
     budgets: "/finance/budgets",
     goals: "/finance/goals",
     household: "/finance/household",
-    insights: "/finance/insights",
+    insights: "/finance/insights"
   },
   gifts: { list: "/gifts" },
   dates: { list: "/dates", ideas: "/dates/ideas" },
@@ -38,6 +38,6 @@ export const API_ROUTES = {
     context: "/recommendations/context",
     suggestions: "/recommendations/suggestions",
     generate: "/recommendations/suggestions/generate",
-    accept: "/recommendations/suggestions/accept",
-  },
+    accept: "/recommendations/suggestions/accept"
+  }
 } as const;

@@ -5,6 +5,6 @@ export const MOCK_HOUSEHOLD_PROFILE: HouseholdProfileDto = {
   name: "Carlos ❤️ Laura",
   members: [
     { memberId: "usr-carlos", memberName: "Carlos", amount: 2_100_000 },
-    { memberId: "usr-laura", memberName: "Laura", amount: 1_500_000 },
-  ],
+    { memberId: "usr-laura", memberName: "Laura", amount: 1_500_000 }
+  ]
 };

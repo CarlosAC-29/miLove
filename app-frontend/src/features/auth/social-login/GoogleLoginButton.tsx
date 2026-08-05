@@ -11,7 +11,9 @@ export function GoogleLoginButton() {
     try {
       await continueWithGoogle();
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "No se pudo iniciar con Google.");
+      setError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo iniciar con Google."
+      );
     }
   };
 

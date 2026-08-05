@@ -5,10 +5,16 @@ export const Route = createFileRoute("/movies")({
   head: () => ({
     meta: [
       { title: "Películas — MiLove" },
-      { name: "description", content: "Pendientes, vistas y recomendadas en MiLove, la app para parejas." },
+      {
+        name: "description",
+        content: "Pendientes, vistas y recomendadas en MiLove, la app para parejas."
+      },
       { property: "og:title", content: "Películas — MiLove" },
-      { property: "og:description", content: "Pendientes, vistas y recomendadas en MiLove, la app para parejas." },
-    ],
+      {
+        property: "og:description",
+        content: "Pendientes, vistas y recomendadas en MiLove, la app para parejas."
+      }
+    ]
   }),
-  component: () => <ComingSoonPage title="Películas" subtitle="Pendientes, vistas y recomendadas" />,
+  component: () => <ComingSoonPage title="Películas" subtitle="Pendientes, vistas y recomendadas" />
 });

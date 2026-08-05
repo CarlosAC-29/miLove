@@ -20,7 +20,7 @@ const INITIAL_STATE: FinanceDashboardState = {
   goals: [],
   householdProfile: null,
   isLoading: true,
-  error: null,
+  error: null
 };
 
 export function useFinanceDashboard(context: FinanceContext) {
@@ -33,7 +33,7 @@ export function useFinanceDashboard(context: FinanceContext) {
         financeService.listTransactions(context),
         financeService.listBudgets(context),
         financeService.listGoals(context),
-        context === "household" ? financeService.getHouseholdProfile() : Promise.resolve(null),
+        context === "household" ? financeService.getHouseholdProfile() : Promise.resolve(null)
       ]);
 
       setState({
@@ -42,13 +42,13 @@ export function useFinanceDashboard(context: FinanceContext) {
         goals,
         householdProfile,
         isLoading: false,
-        error: null,
+        error: null
       });
     } catch (error) {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "No se pudieron cargar tus finanzas.",
+        error: error instanceof Error ? error.message : "No se pudieron cargar tus finanzas."
       }));
     }
   }, [context]);
@@ -62,6 +62,6 @@ export function useFinanceDashboard(context: FinanceContext) {
   return {
     ...state,
     summary,
-    reload: load,
+    reload: load
   };
 }

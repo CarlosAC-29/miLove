@@ -21,6 +21,6 @@ export function useLogin() {
   return {
     isLoading,
     loginWithEmail,
-    registerWithEmail,
+    registerWithEmail
   };
 }

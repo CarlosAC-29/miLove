@@ -16,7 +16,7 @@ export function useCreatePersonalGoal(onSuccess?: () => Promise<void> | void) {
     try {
       await financeService.createGoal({
         ...input,
-        context: "personal",
+        context: "personal"
       });
       await onSuccess?.();
     } finally {

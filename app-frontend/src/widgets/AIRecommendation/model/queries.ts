@@ -6,5 +6,5 @@ export const aiRecommendationsQuery = () =>
   queryOptions({
     queryKey: ["recommendations", "ai"],
     queryFn: () => aiService.list(),
-    staleTime: 60_000,
+    staleTime: 60_000
   });

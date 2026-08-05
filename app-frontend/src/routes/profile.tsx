@@ -5,8 +5,8 @@ export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Perfil — MiLove" },
-      { name: "description", content: "Gestiona tu sesion y proveedor de acceso en MiLove." },
-    ],
+      { name: "description", content: "Gestiona tu sesion y proveedor de acceso en MiLove." }
+    ]
   }),
-  component: ProfilePage,
+  component: ProfilePage
 });

@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import type { AuthSession, SignInWithEmailInput, SignUpWithEmailInput, User } from "@/entities/user/types";
+import type {
+  AuthSession,
+  SignInWithEmailInput,
+  SignUpWithEmailInput,
+  User
+} from "@/entities/user/types";
 import { authService } from "@/services/auth/auth.service";
 
 interface AuthState {
@@ -20,7 +25,7 @@ function applySession(session: AuthSession | null) {
   return {
     session,
     user: session?.user ?? null,
-    isAuthenticated: session !== null,
+    isAuthenticated: session !== null
   };
 }
 
@@ -88,6 +93,6 @@ export const useAuthStore = create<AuthState>()((set, get) => {
       } finally {
         set({ ...applySession(null), isLoading: false });
       }
-    },
+    }
   };
 });

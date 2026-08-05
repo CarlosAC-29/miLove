@@ -15,7 +15,7 @@ export function useCreateHouseholdBudget(onSuccess?: () => Promise<void> | void)
     try {
       await financeService.createBudget({
         ...input,
-        context: "household",
+        context: "household"
       });
       await onSuccess?.();
     } finally {

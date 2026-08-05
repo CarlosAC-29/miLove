@@ -16,7 +16,7 @@ export function useCreateSharedGoal(onSuccess?: () => Promise<void> | void) {
     try {
       await financeService.createGoal({
         ...input,
-        context: "household",
+        context: "household"
       });
       await onSuccess?.();
     } finally {

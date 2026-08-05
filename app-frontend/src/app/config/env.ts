@@ -14,5 +14,5 @@ export interface AppEnv {
 export const env: AppEnv = {
   apiBaseUrl: import.meta.env["VITE_API_BASE_URL"] ?? "/api",
   useMocks: (import.meta.env["VITE_USE_MOCKS"] ?? "true") !== "false",
-  apiTimeoutMs: Number(import.meta.env["VITE_API_TIMEOUT_MS"] ?? 15000),
+  apiTimeoutMs: Number(import.meta.env["VITE_API_TIMEOUT_MS"] ?? 15000)
 };

@@ -33,7 +33,9 @@ export function FinanceDashboard({ context }: { context: FinanceContext }) {
     try {
       await deletePersonalTransaction(transactionId);
     } catch (caughtError) {
-      setActionError(caughtError instanceof Error ? caughtError.message : "No se pudo eliminar la transaccion.");
+      setActionError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo eliminar la transaccion."
+      );
     }
   };
 
@@ -47,7 +49,9 @@ export function FinanceDashboard({ context }: { context: FinanceContext }) {
       }
       await editSharedExpense(transaction.id, { description: updatedDescription });
     } catch (caughtError) {
-      setActionError(caughtError instanceof Error ? caughtError.message : "No se pudo editar la transaccion.");
+      setActionError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo editar la transaccion."
+      );
     }
   };
 
@@ -78,7 +82,9 @@ export function FinanceDashboard({ context }: { context: FinanceContext }) {
     <div className="space-y-4">
       {context === "household" ? (
         <SurfaceCard className="space-y-1">
-          <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">Finanzas del hogar</p>
+          <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            Finanzas del hogar
+          </p>
           <h2 className="text-xl">{householdProfile?.name ?? "Hogar"}</h2>
         </SurfaceCard>
       ) : null}
@@ -116,14 +122,22 @@ export function FinanceDashboard({ context }: { context: FinanceContext }) {
         <h3 className="text-sm font-semibold">
           {context === "personal" ? "Crear presupuesto personal" : "Crear presupuesto hogar"}
         </h3>
-        {context === "personal" ? <PersonalBudgetForm onSaved={reload} /> : <HouseholdBudgetForm onSaved={reload} />}
+        {context === "personal" ? (
+          <PersonalBudgetForm onSaved={reload} />
+        ) : (
+          <HouseholdBudgetForm onSaved={reload} />
+        )}
       </SurfaceCard>
 
       <SurfaceCard className="space-y-3">
         <h3 className="text-sm font-semibold">
           {context === "personal" ? "Crear meta personal" : "Crear meta compartida"}
         </h3>
-        {context === "personal" ? <PersonalGoalForm onSaved={reload} /> : <SharedGoalForm onSaved={reload} />}
+        {context === "personal" ? (
+          <PersonalGoalForm onSaved={reload} />
+        ) : (
+          <SharedGoalForm onSaved={reload} />
+        )}
       </SurfaceCard>
 
       {actionError ? (

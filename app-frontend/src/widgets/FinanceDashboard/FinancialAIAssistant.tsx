@@ -4,13 +4,15 @@ import { formatCurrency } from "@/shared/lib/format";
 
 export function FinancialAIAssistant({
   summary,
-  transactions,
+  transactions
 }: {
   summary: FinanceSummary;
   transactions: readonly Transaction[];
 }) {
   const entertainment = transactions
-    .filter((transaction) => transaction.type === "expense" && transaction.category === "entretenimiento")
+    .filter(
+      (transaction) => transaction.type === "expense" && transaction.category === "entretenimiento"
+    )
     .reduce((total, transaction) => total + transaction.amount, 0);
   const suggestion = Math.round(entertainment * 0.2);
 

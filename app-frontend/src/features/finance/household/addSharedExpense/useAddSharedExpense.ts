@@ -12,7 +12,7 @@ export function useAddSharedExpense(onSuccess?: () => Promise<void> | void) {
     try {
       await financeService.createTransaction({
         ...input,
-        context: "household",
+        context: "household"
       });
       await onSuccess?.();
     } finally {

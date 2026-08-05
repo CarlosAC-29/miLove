@@ -21,7 +21,10 @@ export function BudgetCard({ budgets }: { budgets: readonly Budget[] }) {
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-muted">
-                  <div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${progress}%` }} />
+                  <div
+                    className="h-full rounded-full bg-accent transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
                 <p className="mt-1 text-right text-[11px] text-muted-foreground">{progress}%</p>
               </div>

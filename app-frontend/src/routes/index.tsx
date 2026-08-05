@@ -7,14 +7,14 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Organiza finanzas, citas, regalos, películas y planes en pareja desde una sola app móvil.",
+          "Organiza finanzas, citas, regalos, películas y planes en pareja desde una sola app móvil."
       },
       { property: "og:title", content: "MiLove — El espacio digital de su relación" },
       {
         property: "og:description",
-        content: "Un ecosistema de módulos para organizar y mejorar la vida en pareja.",
-      },
-    ],
+        content: "Un ecosistema de módulos para organizar y mejorar la vida en pareja."
+      }
+    ]
   }),
-  component: () => <Navigate to="/home" />,
+  component: () => <Navigate to="/home" />
 });

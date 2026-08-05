@@ -14,7 +14,7 @@ export const CATEGORIES: readonly Category[] = [
   { id: "educacion", name: "Educación", color: "chart-5" },
   { id: "hogar", name: "Hogar", color: "chart-4" },
   { id: "ingresos", name: "Ingresos", color: "chart-3" },
-  { id: "otros", name: "Otros", color: "chart-2" },
+  { id: "otros", name: "Otros", color: "chart-2" }
 ] as const;
 
 export function getCategory(id: string): Category {

@@ -1,7 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { CATEGORIES } from "@/entities/category/types";
 import type { TransactionType } from "@/entities/transaction/types";
 import { useAddPersonalTransaction } from "./useAddPersonalTransaction";
@@ -34,12 +40,14 @@ export function PersonalTransactionForm({ onSaved }: PersonalTransactionFormProp
         type,
         category,
         date,
-        description: description.trim(),
+        description: description.trim()
       });
       setAmount("");
       setDescription("");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "No se pudo crear la transaccion.");
+      setError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo crear la transaccion."
+      );
     }
   };
 

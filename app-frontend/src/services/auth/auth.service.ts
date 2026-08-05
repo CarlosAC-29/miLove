@@ -7,7 +7,7 @@ import {
   type AuthSession,
   type SignInWithEmailInput,
   type SignUpWithEmailInput,
-  type UserDto,
+  type UserDto
 } from "@/entities/user/types";
 import { MOCK_USER } from "@/entities/user/mock/users.mock";
 import { googleAuthService } from "./google.service";
@@ -26,7 +26,7 @@ function toSession(response: AuthApiResponse): AuthSession {
     user: mapUser(response.user),
     accessToken: response.accessToken,
     ...(response.refreshToken ? { refreshToken: response.refreshToken } : {}),
-    ...(response.expiresAt ? { expiresAt: response.expiresAt } : {}),
+    ...(response.expiresAt ? { expiresAt: response.expiresAt } : {})
   };
 }
 
@@ -57,7 +57,7 @@ export const authService = {
         name: input.name,
         email: input.email,
         provider: "email",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
       const session: AuthSession = { user: mapUser(dto), accessToken: `mock.email.${dto.id}` };
       sessionStorageService.write(session);
@@ -87,8 +87,8 @@ export const authService = {
         API_ROUTES.auth.logout,
         { refreshToken },
         {
-          headers: sessionStorageService.authHeader(),
-        },
+          headers: sessionStorageService.authHeader()
+        }
       );
     }
     sessionStorageService.clear();
@@ -97,5 +97,5 @@ export const authService = {
   /** Restaura la sesión al abrir la app (futuro: validar/refrescar el JWT). */
   restoreSession(): AuthSession | null {
     return sessionStorageService.read();
-  },
+  }
 };

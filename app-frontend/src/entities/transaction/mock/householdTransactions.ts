@@ -10,7 +10,7 @@ export const MOCK_HOUSEHOLD_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-01",
     context: "household",
     ownerId: "usr-carlos",
-    createdAt: "2026-08-01T10:00:00.000Z",
+    createdAt: "2026-08-01T10:00:00.000Z"
   },
   {
     id: "htx-2",
@@ -21,7 +21,7 @@ export const MOCK_HOUSEHOLD_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-02",
     context: "household",
     ownerId: "usr-laura",
-    createdAt: "2026-08-02T19:00:00.000Z",
+    createdAt: "2026-08-02T19:00:00.000Z"
   },
   {
     id: "htx-3",
@@ -32,7 +32,7 @@ export const MOCK_HOUSEHOLD_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-04",
     context: "household",
     ownerId: "usr-carlos",
-    createdAt: "2026-08-04T09:30:00.000Z",
+    createdAt: "2026-08-04T09:30:00.000Z"
   },
   {
     id: "htx-4",
@@ -43,7 +43,7 @@ export const MOCK_HOUSEHOLD_TRANSACTIONS: TransactionDto[] = [
     date: "2026-07-30",
     context: "household",
     ownerId: "usr-laura",
-    createdAt: "2026-07-30T21:15:00.000Z",
+    createdAt: "2026-07-30T21:15:00.000Z"
   },
   {
     id: "htx-5",
@@ -54,7 +54,7 @@ export const MOCK_HOUSEHOLD_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-01",
     context: "household",
     ownerId: "usr-carlos",
-    createdAt: "2026-08-01T08:00:00.000Z",
+    createdAt: "2026-08-01T08:00:00.000Z"
   },
   {
     id: "htx-6",
@@ -65,6 +65,6 @@ export const MOCK_HOUSEHOLD_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-01",
     context: "household",
     ownerId: "usr-laura",
-    createdAt: "2026-08-01T08:05:00.000Z",
-  },
+    createdAt: "2026-08-01T08:05:00.000Z"
+  }
 ];

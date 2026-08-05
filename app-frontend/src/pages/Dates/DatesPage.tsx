@@ -7,11 +7,12 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import type { ApiError } from "@/services/api/errors";
 import { aiService } from "@/services/recommendations/ai.service";
+import { datesService, type AppointmentDto } from "@/services/dates.service";
 import { Screen } from "@/shared/ui/Screen";
 import { SectionTitle, SurfaceCard } from "@/shared/ui/SurfaceCard";
 
@@ -34,6 +35,7 @@ function getErrorMessage(error: unknown) {
 
 const CONTEXT_KEY = ["recommendations", "context"] as const;
 const SUGGESTIONS_KEY = ["recommendations", "suggestions"] as const;
+const APPOINTMENTS_KEY = ["dates", "appointments"] as const;
 
 export function DatesPage() {
   const queryClient = useQueryClient();
@@ -42,17 +44,24 @@ export function DatesPage() {
   const [contextDraft, setContextDraft] = useState("");
   const [contextError, setContextError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [draftSuggestions, setDraftSuggestions] = useState<Awaited<ReturnType<typeof aiService.generateSuggestions>>["suggestions"]>([]);
+  const [draftSuggestions, setDraftSuggestions] = useState<
+    Awaited<ReturnType<typeof aiService.generateSuggestions>>["suggestions"]
+  >([]);
   const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<string[]>([]);
 
   const contextQuery = useQuery({
     queryKey: CONTEXT_KEY,
-    queryFn: () => aiService.getContextState(),
+    queryFn: () => aiService.getContextState()
   });
 
   const suggestionsQuery = useQuery({
     queryKey: SUGGESTIONS_KEY,
-    queryFn: () => aiService.listSuggestions("all"),
+    queryFn: () => aiService.listSuggestions("all")
+  });
+
+  const appointmentsQuery = useQuery({
+    queryKey: APPOINTMENTS_KEY,
+    queryFn: () => datesService.listAppointments()
   });
 
   const saveContextMutation = useMutation({
@@ -62,7 +71,7 @@ export function DatesPage() {
       setIsContextModalOpen(false);
       setContextError(null);
     },
-    onError: (error) => setContextError(getErrorMessage(error)),
+    onError: (error) => setContextError(getErrorMessage(error))
   });
 
   const generateMutation = useMutation({
@@ -73,11 +82,11 @@ export function DatesPage() {
       setIsSuggestionsModalOpen(true);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: CONTEXT_KEY }),
-        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY }),
+        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY })
       ]);
       setActionError(null);
     },
-    onError: (error) => setActionError(getErrorMessage(error)),
+    onError: (error) => setActionError(getErrorMessage(error))
   });
 
   const acceptSuggestionsMutation = useMutation({
@@ -85,15 +94,17 @@ export function DatesPage() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: CONTEXT_KEY }),
-        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY }),
+        queryClient.invalidateQueries({ queryKey: SUGGESTIONS_KEY })
       ]);
       setActionError(null);
     },
-    onError: (error) => setActionError(getErrorMessage(error)),
+    onError: (error) => setActionError(getErrorMessage(error))
   });
 
   const deleteFromDraft = (suggestionId: string) => {
-    setDraftSuggestions((current) => current.filter((suggestion) => suggestion.id !== suggestionId));
+    setDraftSuggestions((current) =>
+      current.filter((suggestion) => suggestion.id !== suggestionId)
+    );
     setSelectedSuggestionIds((current) => current.filter((id) => id !== suggestionId));
   };
 
@@ -104,7 +115,9 @@ export function DatesPage() {
 
   const toggleSelected = (suggestionId: string) => {
     setSelectedSuggestionIds((current) =>
-      current.includes(suggestionId) ? current.filter((id) => id !== suggestionId) : [...current, suggestionId],
+      current.includes(suggestionId)
+        ? current.filter((id) => id !== suggestionId)
+        : [...current, suggestionId]
     );
   };
 
@@ -122,8 +135,16 @@ export function DatesPage() {
 
   const acceptedSuggestions = useMemo(
     () => (suggestionsQuery.data ?? []).filter((suggestion) => suggestion.accepted),
-    [suggestionsQuery.data],
+    [suggestionsQuery.data]
   );
+
+  const upcomingAppointments = useMemo(() => {
+    const list: AppointmentDto[] = appointmentsQuery.data ?? [];
+    return list
+      .slice()
+      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+      .filter((a) => new Date(a.startAt).getTime() >= Date.now());
+  }, [appointmentsQuery.data]);
 
   const handleSaveContext = async () => {
     const normalized = contextDraft.trim();
@@ -180,6 +201,41 @@ export function DatesPage() {
       </SurfaceCard>
 
       <div className="mt-6">
+        <SectionTitle>Próximas citas</SectionTitle>
+        <div className="space-y-3">
+          {appointmentsQuery.isLoading ? (
+            <SurfaceCard>
+              <p className="text-sm text-muted-foreground">Cargando citas...</p>
+            </SurfaceCard>
+          ) : upcomingAppointments.length === 0 ? (
+            <SurfaceCard>
+              <p className="text-sm text-muted-foreground">No hay citas próximas.</p>
+            </SurfaceCard>
+          ) : (
+            upcomingAppointments.map((appt) => (
+              <SurfaceCard key={appt.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="mt-1 text-base">{appt.title}</h3>
+                    {appt.description ? (
+                      <p className="mt-2 text-sm text-muted-foreground">{appt.description}</p>
+                    ) : null}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {new Date(appt.startAt).toLocaleString()}{" "}
+                      {appt.endAt ? `· ${new Date(appt.endAt).toLocaleString()}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    <div>{appt.owner?.name ?? "Pareja"}</div>
+                  </div>
+                </div>
+              </SurfaceCard>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6">
         <SectionTitle>Opciones aceptadas</SectionTitle>
         <div className="space-y-3">
           {acceptedSuggestions.length === 0 ? (
@@ -225,7 +281,11 @@ export function DatesPage() {
           />
           {contextError ? <p className="text-xs text-destructive">{contextError}</p> : null}
           <DialogFooter>
-            <Button type="button" onClick={handleSaveContext} disabled={saveContextMutation.isPending}>
+            <Button
+              type="button"
+              onClick={handleSaveContext}
+              disabled={saveContextMutation.isPending}
+            >
               {saveContextMutation.isPending ? "Guardando..." : "Guardar contexto"}
             </Button>
           </DialogFooter>
@@ -272,11 +332,7 @@ export function DatesPage() {
                       </Button>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => toggleSelected(suggestion.id)}
-                      >
+                      <Button type="button" size="sm" onClick={() => toggleSelected(suggestion.id)}>
                         {selected ? "Quitar selección" : "Seleccionar"}
                       </Button>
                       <Button
@@ -311,25 +367,27 @@ export function DatesPage() {
               Cerrar
             </Button>
             <Button
-                type="button"
-                onClick={async () => {
-                  const idsToSave =
-                    selectedSuggestionIds.length > 0
-                      ? selectedSuggestionIds
-                      : draftSuggestions.map((suggestion) => suggestion.id);
-                  if (idsToSave.length === 0) {
-                    setIsSuggestionsModalOpen(false);
-                    return;
-                  }
-                  await acceptSuggestionsMutation.mutateAsync(idsToSave);
-                  setDraftSuggestions((current) => current.filter((suggestion) => !idsToSave.includes(suggestion.id)));
-                  setSelectedSuggestionIds([]);
+              type="button"
+              onClick={async () => {
+                const idsToSave =
+                  selectedSuggestionIds.length > 0
+                    ? selectedSuggestionIds
+                    : draftSuggestions.map((suggestion) => suggestion.id);
+                if (idsToSave.length === 0) {
                   setIsSuggestionsModalOpen(false);
-                }}
-                disabled={acceptSuggestionsMutation.isPending || draftSuggestions.length === 0}
-              >
-                Guardar seleccionadas
-              </Button>
+                  return;
+                }
+                await acceptSuggestionsMutation.mutateAsync(idsToSave);
+                setDraftSuggestions((current) =>
+                  current.filter((suggestion) => !idsToSave.includes(suggestion.id))
+                );
+                setSelectedSuggestionIds([]);
+                setIsSuggestionsModalOpen(false);
+              }}
+              disabled={acceptSuggestionsMutation.isPending || draftSuggestions.length === 0}
+            >
+              Guardar seleccionadas
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

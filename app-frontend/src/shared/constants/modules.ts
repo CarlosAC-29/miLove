@@ -7,7 +7,7 @@ import {
   ListChecks,
   Target,
   UtensilsCrossed,
-  Wallet,
+  Wallet
 } from "lucide-react";
 
 export interface ModuleDefinition {
@@ -35,7 +35,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Gastos, ingresos y presupuesto compartido",
     icon: Wallet,
     to: "/finance",
-    accent: "success",
+    accent: "success"
   },
   {
     id: "dates",
@@ -43,7 +43,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Ideas y planes para verse más seguido",
     icon: Heart,
     to: "/dates",
-    accent: "primary",
+    accent: "primary"
   },
   {
     id: "gifts",
@@ -51,7 +51,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Ideas, favoritos y preferencias",
     icon: Gift,
     to: "/gifts",
-    accent: "accent",
+    accent: "accent"
   },
   {
     id: "movies",
@@ -59,7 +59,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Pendientes, vistas y recomendadas",
     icon: Clapperboard,
     to: "/movies",
-    accent: "chart-5",
+    accent: "chart-5"
   },
   {
     id: "restaurants",
@@ -67,7 +67,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Lugares por descubrir y favoritos",
     icon: UtensilsCrossed,
     to: "/restaurants",
-    accent: "chart-4",
+    accent: "chart-4"
   },
   {
     id: "plans",
@@ -75,7 +75,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Agenda conjunta de la pareja",
     icon: CalendarDays,
     to: "/plans",
-    accent: "primary",
+    accent: "primary"
   },
   {
     id: "wishlist",
@@ -83,7 +83,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Lo que sueñan tener o hacer",
     icon: ListChecks,
     to: "/wishlist",
-    accent: "accent",
+    accent: "accent"
   },
   {
     id: "goals",
@@ -91,6 +91,6 @@ export const MODULES: readonly ModuleDefinition[] = [
     description: "Objetivos comunes y su progreso",
     icon: Target,
     to: "/goals",
-    accent: "success",
-  },
+    accent: "success"
+  }
 ] as const;

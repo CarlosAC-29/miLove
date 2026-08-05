@@ -22,7 +22,8 @@ export function ProfilePage() {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Proveedor: <span className="font-semibold text-foreground">{user?.provider ?? "email"}</span>
+          Proveedor:{" "}
+          <span className="font-semibold text-foreground">{user?.provider ?? "email"}</span>
         </p>
         <Button
           type="button"

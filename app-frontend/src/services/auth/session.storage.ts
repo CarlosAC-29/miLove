@@ -28,5 +28,5 @@ export const sessionStorageService = {
   authHeader(): Record<string, string> {
     const session = this.read();
     return session ? { Authorization: `Bearer ${session.accessToken}` } : {};
-  },
+  }
 };

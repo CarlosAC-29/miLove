@@ -1,7 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { CATEGORIES } from "@/entities/category/types";
 import { useCreatePersonalBudget } from "./useCreatePersonalBudget";
 
@@ -29,12 +35,14 @@ export function PersonalBudgetForm({ onSaved }: PersonalBudgetFormProps) {
       await createPersonalBudget({
         name: name.trim(),
         categoryId,
-        amount: numericAmount,
+        amount: numericAmount
       });
       setName("");
       setAmount("");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "No se pudo crear el presupuesto.");
+      setError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo crear el presupuesto."
+      );
     }
   };
 
@@ -68,7 +76,12 @@ export function PersonalBudgetForm({ onSaved }: PersonalBudgetFormProps) {
         required
         className="h-10 rounded-xl bg-surface"
       />
-      <Button type="submit" variant="outline" className="h-10 w-full rounded-xl" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        variant="outline"
+        className="h-10 w-full rounded-xl"
+        disabled={isSubmitting}
+      >
         Crear presupuesto personal
       </Button>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}

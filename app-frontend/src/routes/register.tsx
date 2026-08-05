@@ -11,8 +11,8 @@ export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Registro — MiLove" },
-      { name: "description", content: "Crea una cuenta en MiLove y activa tu dashboard de pareja." },
-    ],
+      { name: "description", content: "Crea una cuenta en MiLove y activa tu dashboard de pareja." }
+    ]
   }),
-  component: RegisterPage,
+  component: RegisterPage
 });

@@ -15,7 +15,7 @@ export function useAddPersonalTransaction(onSuccess?: () => Promise<void> | void
       await financeService.createTransaction({
         ...input,
         context: "personal",
-        ownerId: input.ownerId ?? "usr-carlos",
+        ownerId: input.ownerId ?? "usr-carlos"
       });
       await onSuccess?.();
     } finally {

@@ -25,8 +25,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       monthlyBudget: 2_400_000,
       setTheme: (theme) => set({ theme }),
       setCoupleName: (coupleName) => set({ coupleName }),
-      setMonthlyBudget: (monthlyBudget) => set({ monthlyBudget }),
+      setMonthlyBudget: (monthlyBudget) => set({ monthlyBudget })
     }),
-    { name: "milove.preferences" },
-  ),
+    { name: "milove.preferences" }
+  )
 );

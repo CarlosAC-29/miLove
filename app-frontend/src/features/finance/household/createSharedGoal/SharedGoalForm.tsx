@@ -31,7 +31,7 @@ export function SharedGoalForm({ onSaved }: SharedGoalFormProps) {
         name: name.trim(),
         targetAmount: target,
         currentAmount: Number.isFinite(current) ? current : 0,
-        deadline: deadline || undefined,
+        deadline: deadline || undefined
       });
       setName("");
       setTargetAmount("");
@@ -76,7 +76,12 @@ export function SharedGoalForm({ onSaved }: SharedGoalFormProps) {
         type="date"
         className="h-10 rounded-xl bg-surface"
       />
-      <Button type="submit" variant="outline" className="h-10 w-full rounded-xl" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        variant="outline"
+        className="h-10 w-full rounded-xl"
+        disabled={isSubmitting}
+      >
         Crear meta compartida
       </Button>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}

@@ -31,7 +31,9 @@ export function ContributionManager({ householdProfile, onSaved }: ContributionM
               await updateContribution(member.memberId, amount);
             } catch (caughtError) {
               setError(
-                caughtError instanceof Error ? caughtError.message : "No se pudo actualizar el aporte.",
+                caughtError instanceof Error
+                  ? caughtError.message
+                  : "No se pudo actualizar el aporte."
               );
             }
           }}
@@ -47,7 +49,7 @@ function ContributionRow({
   memberName,
   defaultAmount,
   loading,
-  onSave,
+  onSave
 }: {
   memberId: string;
   memberName: string;

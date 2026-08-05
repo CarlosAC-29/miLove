@@ -23,7 +23,7 @@ async function request<TResponse>(
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   body?: unknown,
-  options: RequestOptions = {},
+  options: RequestOptions = {}
 ): Promise<TResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), apiConfig.timeoutMs);
@@ -34,14 +34,14 @@ async function request<TResponse>(
       method,
       headers: { ...apiConfig.defaultHeaders, ...authHeaders, ...options.headers },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      signal: options.signal ?? controller.signal,
+      signal: options.signal ?? controller.signal
     });
 
     if (!response.ok) {
       throw new ApiError({
         message: `Error ${response.status} al llamar ${path}`,
         status: response.status,
-        details: await response.text().catch(() => undefined),
+        details: await response.text().catch(() => undefined)
       });
     }
 
@@ -67,5 +67,5 @@ export const apiClient = {
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>("PATCH", path, body, options),
   delete: <T>(path: string, options?: RequestOptions) =>
-    request<T>("DELETE", path, undefined, options),
+    request<T>("DELETE", path, undefined, options)
 };

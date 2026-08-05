@@ -12,7 +12,7 @@ import {
   type RecommendationContextStateDto,
   type RecommendationSuggestionDto,
   type SuggestionStatus,
-  type UpsertRecommendationContextInput,
+  type UpsertRecommendationContextInput
 } from "@/entities/recommendation/types";
 import { MOCK_RECOMMENDATIONS } from "@/entities/recommendation/mock/recommendations.mock";
 
@@ -35,7 +35,7 @@ export const aiService = {
       await delay(200);
       return {
         context: null,
-        suggestions: { total: 0, accepted: 0, pending: 0 },
+        suggestions: { total: 0, accepted: 0, pending: 0 }
       };
     }
     return apiClient.get<RecommendationContextStateDto>(API_ROUTES.recommendations.context);
@@ -48,7 +48,7 @@ export const aiService = {
         id: "ctx-mock",
         context: input.context,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
     }
     return apiClient.put<RecommendationContextDto>(API_ROUTES.recommendations.context, input);
@@ -65,15 +65,15 @@ export const aiService = {
           id: "ctx-mock",
           context: input.context ?? "Contexto de ejemplo para citas",
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         },
-        suggestions: [],
+        suggestions: []
       };
     }
-    return apiClient.post<{ context: RecommendationContextDto; suggestions: RecommendationSuggestionDto[] }>(
-      API_ROUTES.recommendations.generate,
-      input,
-    );
+    return apiClient.post<{
+      context: RecommendationContextDto;
+      suggestions: RecommendationSuggestionDto[];
+    }>(API_ROUTES.recommendations.generate, input);
   },
 
   async listSuggestions(status: SuggestionStatus = "all"): Promise<RecommendationSuggestionDto[]> {
@@ -82,7 +82,7 @@ export const aiService = {
       return [];
     }
     return apiClient.get<RecommendationSuggestionDto[]>(API_ROUTES.recommendations.suggestions, {
-      query: { status },
+      query: { status }
     });
   },
 
@@ -92,5 +92,5 @@ export const aiService = {
       return [];
     }
     return apiClient.post<RecommendationSuggestionDto[]>(API_ROUTES.recommendations.accept, input);
-  },
+  }
 };

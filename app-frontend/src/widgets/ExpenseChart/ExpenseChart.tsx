@@ -34,7 +34,10 @@ export function ExpenseChart({ transactions }: { transactions: readonly Transact
                   <span className="font-semibold">{formatCurrency(row.amount)}</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted">
-                  <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${width}%` }} />
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${width}%` }}
+                  />
                 </div>
               </div>
             );

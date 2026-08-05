@@ -20,6 +20,6 @@ export function useSocialLogin() {
   return {
     isLoading,
     continueWithGoogle,
-    continueWithApple,
+    continueWithApple
   };
 }

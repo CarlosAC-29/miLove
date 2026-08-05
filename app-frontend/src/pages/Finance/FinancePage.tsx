@@ -9,7 +9,10 @@ export function FinancePage() {
   const [context, setContext] = useState<FinanceContext>("personal");
 
   return (
-    <Screen title="Finanzas" subtitle="Controla tu dinero personal y del hogar sin mezclar contextos">
+    <Screen
+      title="Finanzas"
+      subtitle="Controla tu dinero personal y del hogar sin mezclar contextos"
+    >
       <div className="space-y-4">
         <SurfaceCard className="space-y-3">
           <h2 className="text-sm font-semibold">Selecciona el espacio</h2>

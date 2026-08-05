@@ -7,7 +7,7 @@ import {
   type CreateTransactionInput,
   type FinanceContext,
   type Transaction,
-  type TransactionDto,
+  type TransactionDto
 } from "@/entities/transaction/types";
 import { MOCK_PERSONAL_TRANSACTIONS } from "@/entities/transaction/mock/personalTransactions";
 import { MOCK_HOUSEHOLD_TRANSACTIONS } from "@/entities/transaction/mock/householdTransactions";
@@ -19,7 +19,7 @@ import { MOCK_GOALS } from "@/entities/goal/mock/goals";
 import {
   mapHouseholdProfile,
   type HouseholdProfile,
-  type HouseholdProfileDto,
+  type HouseholdProfileDto
 } from "@/entities/finance-profile/types";
 import { MOCK_HOUSEHOLD_PROFILE } from "@/entities/finance-profile/mock/householdProfile.mock";
 
@@ -31,7 +31,7 @@ const memory = {
   transactions: [...MOCK_PERSONAL_TRANSACTIONS, ...MOCK_HOUSEHOLD_TRANSACTIONS] as TransactionDto[],
   budgets: [...MOCK_PERSONAL_BUDGETS, ...MOCK_HOUSEHOLD_BUDGETS] as BudgetDto[],
   goals: [...MOCK_GOALS] as GoalDto[],
-  household: MOCK_HOUSEHOLD_PROFILE as HouseholdProfileDto,
+  household: MOCK_HOUSEHOLD_PROFILE as HouseholdProfileDto
 };
 
 function sortByDateDesc(a: TransactionDto, b: TransactionDto): number {
@@ -52,7 +52,7 @@ export const financeService = {
         .map(mapTransaction);
     }
     const dtos = await apiClient.get<TransactionDto[]>(API_ROUTES.finance.transactions, {
-      query: { context },
+      query: { context }
     });
     return dtos.map(mapTransaction);
   },
@@ -63,7 +63,7 @@ export const financeService = {
       const dto: TransactionDto = {
         ...input,
         id: `tx-${Date.now()}`,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
       memory.transactions = [dto, ...memory.transactions];
       applyBudgetSpend(dto, 1);
@@ -75,7 +75,7 @@ export const financeService = {
 
   async updateTransaction(
     id: string,
-    changes: Partial<CreateTransactionInput>,
+    changes: Partial<CreateTransactionInput>
   ): Promise<Transaction> {
     if (env.useMocks) {
       await delay(300);
@@ -89,7 +89,7 @@ export const financeService = {
     }
     const dto = await apiClient.patch<TransactionDto>(
       `${API_ROUTES.finance.transactions}/${id}`,
-      changes,
+      changes
     );
     return mapTransaction(dto);
   },
@@ -111,7 +111,7 @@ export const financeService = {
       return memory.budgets.filter((b) => b.context === context).map(mapBudget);
     }
     const dtos = await apiClient.get<BudgetDto[]>(API_ROUTES.finance.budgets, {
-      query: { context },
+      query: { context }
     });
     return dtos.map(mapBudget);
   },
@@ -162,17 +162,17 @@ export const financeService = {
       memory.household = {
         ...memory.household,
         members: memory.household.members.map((m) =>
-          m.memberId === memberId ? { ...m, amount } : m,
-        ),
+          m.memberId === memberId ? { ...m, amount } : m
+        )
       };
       return mapHouseholdProfile(memory.household);
     }
     const dto = await apiClient.patch<HouseholdProfileDto>(
       `${API_ROUTES.finance.household}/contributions/${memberId}`,
-      { amount },
+      { amount }
     );
     return mapHouseholdProfile(dto);
-  },
+  }
 };
 
 function applyBudgetSpend(transaction: TransactionDto, sign: 1 | -1): void {
@@ -180,6 +180,6 @@ function applyBudgetSpend(transaction: TransactionDto, sign: 1 | -1): void {
   memory.budgets = memory.budgets.map((budget) =>
     budget.context === transaction.context && budget.categoryId === transaction.category
       ? { ...budget, spent: Math.max(0, budget.spent + sign * transaction.amount) }
-      : budget,
+      : budget
   );
 }

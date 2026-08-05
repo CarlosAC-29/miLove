@@ -8,7 +8,7 @@ type LovableEvents = {
   captureException?: (
     error: unknown,
     context?: Record<string, unknown>,
-    options?: LovableErrorOptions,
+    options?: LovableErrorOptions
   ) => void;
 };
 
@@ -30,13 +30,13 @@ export function reportLovableError(error: unknown, context: Record<string, unkno
     {
       source: "react_error_boundary",
       route: window.location.pathname,
-      ...context,
+      ...context
     },
     {
       mechanism: "react_error_boundary",
       handled: false,
-      severity: "error",
-    },
+      severity: "error"
+    }
   );
   // Prod React does not rethrow boundary-caught errors to window.onerror, so the
   // editor's telemetry never sees them. Forward to lovable.js's reporting hook,
@@ -53,6 +53,6 @@ export function reportLovableError(error: unknown, context: Record<string, unkno
   window.__lovableReportRuntimeError?.({
     message,
     ...(stack !== undefined && { stack }),
-    filename: window.location.pathname,
+    filename: window.location.pathname
   });
 }

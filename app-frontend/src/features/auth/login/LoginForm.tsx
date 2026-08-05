@@ -21,7 +21,7 @@ export function LoginForm({ mode }: LoginFormProps) {
   const [form, setForm] = useState<EmailLoginFormState>({
     name: "",
     email: "",
-    password: "",
+    password: ""
   });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -33,17 +33,21 @@ export function LoginForm({ mode }: LoginFormProps) {
         await registerWithEmail({
           name: form.name.trim(),
           email: form.email.trim(),
-          password: form.password,
+          password: form.password
         });
         return;
       }
 
       await loginWithEmail({
         email: form.email.trim(),
-        password: form.password,
+        password: form.password
       });
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "No se pudo completar la autenticacion.");
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudo completar la autenticacion."
+      );
     }
   };
 

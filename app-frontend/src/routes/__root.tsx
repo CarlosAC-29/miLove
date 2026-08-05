@@ -7,7 +7,7 @@ import {
   useRouter,
   useRouterState,
   HeadContent,
-  Scripts,
+  Scripts
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -91,12 +91,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       {
         name: "viewport",
-        content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
       },
       { title: "MiLove — App para parejas" },
       {
         name: "description",
-        content: "Organiza finanzas, citas, regalos, películas y planes en pareja.",
+        content: "Organiza finanzas, citas, regalos, películas y planes en pareja."
       },
       { name: "theme-color", content: "#fdf8f5" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "mobile-web-app-capable", content: "yes" },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "summary_large_image" }
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -112,17 +112,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.svg" },
-    ],
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.svg" }
+    ]
   }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+  errorComponent: ErrorComponent
 });
 
 function RootShell({ children }: { children: ReactNode }) {
@@ -163,8 +163,7 @@ function RootComponent() {
     void registerServiceWorker();
   }, []);
 
-  const showBottomNavigation =
-    isAuthenticated && pathname !== "/login" && pathname !== "/register";
+  const showBottomNavigation = isAuthenticated && pathname !== "/login" && pathname !== "/register";
 
   return (
     <QueryClientProvider client={queryClient}>

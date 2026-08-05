@@ -13,7 +13,7 @@ export function getUserInitials(user: Pick<User, "name">): string {
 const PROVIDER_LABELS: Record<AuthProvider, string> = {
   google: "Google",
   apple: "Apple",
-  email: "Email",
+  email: "Email"
 };
 
 export function getProviderLabel(provider: AuthProvider): string {

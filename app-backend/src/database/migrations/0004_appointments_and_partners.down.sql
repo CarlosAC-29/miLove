@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE IF EXISTS appointments;
+DROP TABLE IF EXISTS user_partners;
+
+COMMIT;

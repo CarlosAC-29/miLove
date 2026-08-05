@@ -5,5 +5,5 @@ export const APP_CONFIG = {
   description:
     "Organiza finanzas, citas, regalos, películas y planes en pareja desde una sola app.",
   locale: "es-CO",
-  currency: "COP",
+  currency: "COP"
 } as const;

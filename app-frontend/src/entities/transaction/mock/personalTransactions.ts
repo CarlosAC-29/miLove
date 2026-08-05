@@ -10,7 +10,7 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-01",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-08-01T09:00:00.000Z",
+    createdAt: "2026-08-01T09:00:00.000Z"
   },
   {
     id: "ptx-2",
@@ -21,7 +21,7 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-02",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-08-02T18:20:00.000Z",
+    createdAt: "2026-08-02T18:20:00.000Z"
   },
   {
     id: "ptx-3",
@@ -32,7 +32,7 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-08-03",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-08-03T08:10:00.000Z",
+    createdAt: "2026-08-03T08:10:00.000Z"
   },
   {
     id: "ptx-4",
@@ -43,7 +43,7 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-07-28",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-07-28T22:00:00.000Z",
+    createdAt: "2026-07-28T22:00:00.000Z"
   },
   {
     id: "ptx-5",
@@ -54,7 +54,7 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-07-25",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-07-25T13:00:00.000Z",
+    createdAt: "2026-07-25T13:00:00.000Z"
   },
   {
     id: "ptx-6",
@@ -65,7 +65,7 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-07-20",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-07-20T16:40:00.000Z",
+    createdAt: "2026-07-20T16:40:00.000Z"
   },
   {
     id: "ptx-7",
@@ -76,6 +76,6 @@ export const MOCK_PERSONAL_TRANSACTIONS: TransactionDto[] = [
     date: "2026-07-18",
     context: "personal",
     ownerId: "usr-carlos",
-    createdAt: "2026-07-18T11:00:00.000Z",
-  },
+    createdAt: "2026-07-18T11:00:00.000Z"
+  }
 ];

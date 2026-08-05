@@ -34,7 +34,13 @@ export function TransactionList({ transactions, onDelete, onEdit }: TransactionL
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <p className={isIncome ? "text-sm font-semibold text-success" : "text-sm font-semibold text-foreground"}>
+                  <p
+                    className={
+                      isIncome
+                        ? "text-sm font-semibold text-success"
+                        : "text-sm font-semibold text-foreground"
+                    }
+                  >
                     {isIncome ? "+" : "-"}
                     {formatCurrency(transaction.amount)}
                   </p>
