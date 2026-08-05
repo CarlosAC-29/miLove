@@ -115,8 +115,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
       },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.svg" },
     ],
   }),
   shellComponent: RootShell,
@@ -148,6 +148,20 @@ function RootComponent() {
   useEffect(() => {
     hydrateSession();
   }, [hydrateSession]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+
+    const registerServiceWorker = async () => {
+      try {
+        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      } catch (error) {
+        console.error("Unable to register service worker", error);
+      }
+    };
+
+    void registerServiceWorker();
+  }, []);
 
   const showBottomNavigation =
     isAuthenticated && pathname !== "/login" && pathname !== "/register";
