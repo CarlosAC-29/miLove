@@ -310,7 +310,12 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
       </AlertDialog>
 
       <BalanceCard summary={summary} />
-      <FinancialAIAssistant summary={summary} transactions={transactions} />
+      <FinancialAIAssistant
+        summary={summary}
+        transactions={transactions}
+        context={context}
+        month={month}
+      />
       <ExpenseChart transactions={transactions} />
       <TransactionList
         transactions={transactions}

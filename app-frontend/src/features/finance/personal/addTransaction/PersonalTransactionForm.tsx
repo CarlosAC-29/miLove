@@ -89,7 +89,6 @@ export function PersonalTransactionForm({ onSaved, initialType = "expense" }: Pe
       <Select
         value={category}
         onValueChange={setCategory}
-        disabled={isFixed}
       >
         <SelectTrigger className="h-10 rounded-xl bg-surface">
           <SelectValue placeholder="Categoria" />

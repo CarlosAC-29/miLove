@@ -34,6 +34,11 @@ const memory = {
   household: MOCK_HOUSEHOLD_PROFILE as HouseholdProfileDto
 };
 
+export interface FinanceInsightDto {
+  title: string;
+  message: string;
+}
+
 function sortByDateDesc(a: TransactionDto, b: TransactionDto): number {
   return b.date.localeCompare(a.date);
 }
@@ -270,5 +275,28 @@ export const financeService = {
       { amount }
     );
     return mapHouseholdProfile(dto);
+  },
+
+  async getInsights(context: FinanceContext, month: string): Promise<FinanceInsightDto[]> {
+    if (env.useMocks) {
+      await delay();
+      const expenses = memory.transactions
+        .filter(
+          (transaction) =>
+            transaction.context === context &&
+            transaction.type === "expense" &&
+            appliesToMonth(transaction, month)
+        )
+        .reduce((total, transaction) => total + transaction.amount, 0);
+      return [
+        {
+          title: "Financial AI Assistant",
+          message: `Este mes llevas ${expenses.toLocaleString("es-CO")} en gastos. Revisa tus gastos pequeños para identificar una oportunidad de ahorro.`
+        }
+      ];
+    }
+    return apiClient.get<FinanceInsightDto[]>(API_ROUTES.finance.insights, {
+      query: { context, month }
+    });
   }
 };
