@@ -5,6 +5,7 @@ interface CreatePersonalBudgetInput {
   name: string;
   categoryId: string;
   amount: number;
+  month: string;
 }
 
 export function useCreatePersonalBudget(onSuccess?: () => Promise<void> | void) {

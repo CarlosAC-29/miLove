@@ -64,7 +64,7 @@ export const recommendationsService = {
     return mapContext(saved);
   },
 
-  async generateSuggestions(userId: string, input: { context?: string }) {
+  async generateSuggestions(userId: string, input: { context?: string; category?: SuggestionCategory }) {
     let userContext = input.context;
     if (userContext) {
       userContext = userContext.trim();
@@ -83,8 +83,12 @@ export const recommendationsService = {
     const suggestions = env.GROQ_API_KEY && env.GROQ_API_URL
       ? await generateGroqSuggestions(context.context)
       : await generateGeminiSuggestions(context.context);
+    const forcedCategory = input.category;
+    const normalizedSuggestions = forcedCategory
+      ? suggestions.map((suggestion) => ({ ...suggestion, category: forcedCategory }))
+      : suggestions;
     await recommendationsRepository.deleteSuggestionsByContext(context.id);
-    const created = await recommendationsRepository.createSuggestions(context.id, userId, suggestions);
+    const created = await recommendationsRepository.createSuggestions(context.id, userId, normalizedSuggestions);
 
     return {
       context: mapContext(context),

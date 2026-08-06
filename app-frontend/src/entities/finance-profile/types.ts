@@ -4,12 +4,14 @@
  */
 export interface ContributionDto {
   memberId: string;
+  userId?: string;
   memberName: string;
   amount: number;
 }
 
 export interface Contribution {
   readonly memberId: string;
+  readonly userId?: string;
   readonly memberName: string;
   readonly amount: number;
 }

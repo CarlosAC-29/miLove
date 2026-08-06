@@ -8,6 +8,7 @@ export interface TransactionDto {
   amount: number;
   type: TransactionType;
   category: string;
+  isFixed: boolean;
   description: string;
   date: string;
   context: FinanceContext;
@@ -20,6 +21,7 @@ export interface Transaction {
   readonly amount: number;
   readonly type: TransactionType;
   readonly category: string;
+  readonly isFixed: boolean;
   readonly description: string;
   readonly date: string;
   readonly context: FinanceContext;
@@ -31,6 +33,7 @@ export interface CreateTransactionInput {
   readonly amount: number;
   readonly type: TransactionType;
   readonly category: string;
+  readonly isFixed?: boolean;
   readonly description: string;
   readonly date: string;
   readonly context: FinanceContext;
@@ -45,6 +48,7 @@ export function mapTransaction(dto: TransactionDto): Transaction {
 export interface FinanceSummary {
   readonly income: number;
   readonly expenses: number;
+  readonly fixedExpenses: number;
   readonly savings: number;
   readonly balance: number;
 }
@@ -53,9 +57,21 @@ export function buildSummary(transactions: readonly Transaction[]): FinanceSumma
   const income = transactions
     .filter((t) => t.type === "income")
     .reduce((total, t) => total + t.amount, 0);
-  const expenses = transactions
-    .filter((t) => t.type === "expense")
+
+  const fixedExpenses = transactions
+    .filter((t) => t.type === "expense" && t.isFixed && t.category !== "ahorro")
     .reduce((total, t) => total + t.amount, 0);
 
-  return { income, expenses, savings: income - expenses, balance: income - expenses };
+  const variableExpenses = transactions
+    .filter((t) => t.type === "expense" && !t.isFixed && t.category !== "ahorro")
+    .reduce((total, t) => total + t.amount, 0);
+
+  const savings = transactions
+    .filter((t) => t.type === "expense" && t.category === "ahorro")
+    .reduce((total, t) => total + t.amount, 0);
+
+  const expenses = fixedExpenses + variableExpenses;
+  const balance = income - expenses - savings;
+
+  return { income, expenses, fixedExpenses, savings, balance };
 }

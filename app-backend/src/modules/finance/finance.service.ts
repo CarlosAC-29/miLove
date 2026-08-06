@@ -1,20 +1,33 @@
 import { HttpError } from "../../shared/errors/http-error.js";
 import { financeRepository, type FinanceContext } from "./finance.repository.js";
 
-function buildSummary(transactions: Array<{ amount: number; type: "income" | "expense" }>) {
+function buildSummary(
+  transactions: Array<{ amount: number; type: "income" | "expense"; category: string; isFixed: boolean }>,
+) {
   const income = transactions.filter((t) => t.type === "income").reduce((acc, t) => acc + t.amount, 0);
-  const expenses = transactions.filter((t) => t.type === "expense").reduce((acc, t) => acc + t.amount, 0);
+  const fixedExpenses = transactions
+    .filter((t) => t.type === "expense" && t.isFixed && t.category !== "ahorro")
+    .reduce((acc, t) => acc + t.amount, 0);
+  const variableExpenses = transactions
+    .filter((t) => t.type === "expense" && !t.isFixed && t.category !== "ahorro")
+    .reduce((acc, t) => acc + t.amount, 0);
+  const savings = transactions
+    .filter((t) => t.type === "expense" && t.category === "ahorro")
+    .reduce((acc, t) => acc + t.amount, 0);
+  const expenses = fixedExpenses + variableExpenses;
+  const balance = income - expenses - savings;
   return {
     income,
     expenses,
-    savings: income - expenses,
-    balance: income - expenses,
+    fixedExpenses,
+    savings,
+    balance,
   };
 }
 
 export const financeService = {
-  listTransactions(userId: string, context: FinanceContext) {
-    return financeRepository.listTransactions(userId, context);
+  listTransactions(userId: string, context: FinanceContext, month?: string) {
+    return financeRepository.listTransactions(userId, context, month);
   },
 
   createTransaction(
@@ -23,6 +36,7 @@ export const financeService = {
       amount: number;
       type: "income" | "expense";
       category: string;
+      isFixed?: boolean;
       description: string;
       date: string;
       context: FinanceContext;
@@ -30,6 +44,13 @@ export const financeService = {
     },
   ) {
     return financeRepository.createTransaction({ userId, ...input });
+  },
+
+  extendFixedTransactions(
+    userId: string,
+    input: { context: FinanceContext; month: string },
+  ) {
+    return financeRepository.extendFixedTransactions(userId, input.context, input.month);
   },
 
   async updateTransaction(userId: string, id: string, patch: Record<string, unknown>) {
@@ -42,8 +63,8 @@ export const financeService = {
     return financeRepository.deleteTransaction(userId, id);
   },
 
-  listBudgets(userId: string, context: FinanceContext) {
-    return financeRepository.listBudgets(userId, context);
+  listBudgets(userId: string, context: FinanceContext, month?: string) {
+    return financeRepository.listBudgets(userId, context, month);
   },
 
   createBudget(
@@ -52,10 +73,22 @@ export const financeService = {
       name: string;
       categoryId: string;
       amount: number;
+      month: string;
       context: FinanceContext;
     },
   ) {
     return financeRepository.createBudget({ userId, ...input });
+  },
+
+  async updateBudget(userId: string, id: string, patch: Record<string, unknown>) {
+    const updated = await financeRepository.updateBudget(userId, id, patch);
+    if (!updated) throw new HttpError(404, "Budget not found.");
+    return updated;
+  },
+
+  async deleteBudget(userId: string, id: string) {
+    const deleted = await financeRepository.deleteBudget(userId, id);
+    if (!deleted) throw new HttpError(404, "Budget not found.");
   },
 
   listGoals(userId: string, context: FinanceContext) {
@@ -75,8 +108,8 @@ export const financeService = {
     return financeRepository.createGoal({ userId, ...input });
   },
 
-  async getSummary(userId: string, context: FinanceContext) {
-    const transactions = await financeRepository.listTransactions(userId, context);
+  async getSummary(userId: string, context: FinanceContext, month?: string) {
+    const transactions = await financeRepository.listTransactions(userId, context, month);
     return buildSummary(transactions);
   },
 
@@ -94,6 +127,7 @@ export const financeService = {
       name: members[0]!.householdName,
       members: members.map((member) => ({
         memberId: member.memberId,
+        userId: member.userId,
         memberName: member.memberName,
         amount: member.amount,
       })),
@@ -109,13 +143,14 @@ export const financeService = {
     return this.getHouseholdProfile(userId);
   },
 
-  async getInsights(userId: string, context: FinanceContext) {
-    const summary = await this.getSummary(userId, context);
+  async getInsights(userId: string, context: FinanceContext, month?: string) {
+    const summary = await this.getSummary(userId, context, month);
     const potential = Math.round(summary.expenses * 0.1);
+    const monthLabel = month ?? new Date().toISOString().slice(0, 7);
     return [
       {
         title: "Financial AI Assistant",
-        message: `Este mes llevas ${summary.expenses.toLocaleString("es-CO")} en gastos. Podrías ahorrar aproximadamente ${potential.toLocaleString("es-CO")} si recortas gastos pequeños.`,
+        message: `En ${monthLabel} llevas ${summary.expenses.toLocaleString("es-CO")} en gastos. Podrías ahorrar aproximadamente ${potential.toLocaleString("es-CO")} si recortas gastos pequeños.`,
       },
     ];
   },

@@ -6,5 +6,7 @@ import { usersController } from "./users.controller.js";
 const router = Router();
 
 router.get("/me", authMiddleware, asyncHandler(usersController.me));
+router.get("/me/partner", authMiddleware, asyncHandler(usersController.myPartner));
+router.put("/me", authMiddleware, asyncHandler(usersController.updateMe));
 
 export const usersRoutes = router;

@@ -14,6 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
+import { SlowRequestDialog } from "@/app/providers/SlowRequestDialog";
 import { BottomNavigation } from "@/widgets/BottomNavigation/BottomNavigation";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -82,7 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     const isPublicRoute = location.pathname === "/login" || location.pathname === "/register";
     if (isPublicRoute) return;
 
-    if (!useAuthStore.getState().isAuthenticated) {
+    const authState = useAuthStore.getState();
+    if (!authState.hasHydrated) return;
+
+    if (!authState.isAuthenticated) {
       throw redirect({ to: "/login" });
     }
   },
@@ -141,13 +145,21 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const hydrateSession = useAuthStore((state) => state.hydrateSession);
 
   useEffect(() => {
     hydrateSession();
   }, [hydrateSession]);
+
+  useEffect(() => {
+    const isPublicRoute = pathname === "/login" || pathname === "/register";
+    if (!hasHydrated || isAuthenticated || isPublicRoute) return;
+    void router.navigate({ to: "/login" });
+  }, [hasHydrated, isAuthenticated, pathname, router]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -172,6 +184,7 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           {showBottomNavigation ? <BottomNavigation /> : null}
+          <SlowRequestDialog />
         </div>
       </ThemeProvider>
     </QueryClientProvider>

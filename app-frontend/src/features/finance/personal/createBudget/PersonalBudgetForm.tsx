@@ -9,10 +9,31 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { CATEGORIES } from "@/entities/category/types";
+import { formatMoneyInput, parseMoneyInput } from "@/shared/lib/money-input";
 import { useCreatePersonalBudget } from "./useCreatePersonalBudget";
 
 interface PersonalBudgetFormProps {
   onSaved?: () => Promise<void> | void;
+}
+
+const MONTH_OPTIONS = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" }
+] as const;
+
+function buildYearOptions() {
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: 8 }, (_, index) => String(currentYear - 5 + index));
 }
 
 export function PersonalBudgetForm({ onSaved }: PersonalBudgetFormProps) {
@@ -20,12 +41,15 @@ export function PersonalBudgetForm({ onSaved }: PersonalBudgetFormProps) {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("entretenimiento");
   const [amount, setAmount] = useState("");
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedYear, selectedMonth] = month.split("-");
+  const yearOptions = buildYearOptions();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    const numericAmount = Number(amount);
+    const numericAmount = parseMoneyInput(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError("El presupuesto debe ser mayor a 0.");
       return;
@@ -35,7 +59,8 @@ export function PersonalBudgetForm({ onSaved }: PersonalBudgetFormProps) {
       await createPersonalBudget({
         name: name.trim(),
         categoryId,
-        amount: numericAmount
+        amount: numericAmount,
+        month
       });
       setName("");
       setAmount("");
@@ -69,13 +94,39 @@ export function PersonalBudgetForm({ onSaved }: PersonalBudgetFormProps) {
       </Select>
       <Input
         value={amount}
-        onChange={(event) => setAmount(event.target.value)}
+        onChange={(event) => setAmount(formatMoneyInput(event.target.value))}
         placeholder="Monto total"
-        type="number"
-        min={1}
+        type="text"
+        inputMode="numeric"
         required
         className="h-10 rounded-xl bg-surface"
       />
+      <div className="grid grid-cols-2 gap-2">
+        <Select value={selectedMonth} onValueChange={(value) => setMonth(`${selectedYear}-${value}`)}>
+          <SelectTrigger className="h-10 rounded-xl bg-surface">
+            <SelectValue placeholder="Mes" />
+          </SelectTrigger>
+          <SelectContent>
+            {MONTH_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedYear} onValueChange={(value) => setMonth(`${value}-${selectedMonth}`)}>
+          <SelectTrigger className="h-10 rounded-xl bg-surface">
+            <SelectValue placeholder="Año" />
+          </SelectTrigger>
+          <SelectContent>
+            {yearOptions.map((year) => (
+              <SelectItem key={year} value={year}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <Button
         type="submit"
         variant="outline"

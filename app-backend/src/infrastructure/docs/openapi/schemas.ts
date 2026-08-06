@@ -25,6 +25,14 @@ export const openApiSchemas = {
     },
     required: ["id", "name", "email", "provider", "createdAt"],
   },
+  UpdateMeRequest: {
+    type: "object",
+    properties: {
+      name: { type: "string", minLength: 2, maxLength: 120 },
+      avatar: { type: "string", format: "uri", nullable: true },
+    },
+    required: ["name"],
+  },
   AuthSession: {
     type: "object",
     properties: {
@@ -41,8 +49,9 @@ export const openApiSchemas = {
       name: { type: "string", minLength: 2, example: "Carlos" },
       email: { type: "string", format: "email", example: "carlos@example.com" },
       password: { type: "string", minLength: 6, example: "123456" },
+      registrationCode: { type: "string", minLength: 1 },
     },
-    required: ["name", "email", "password"],
+    required: ["name", "email", "password", "registrationCode"],
   },
   LoginRequest: {
     type: "object",
@@ -125,6 +134,7 @@ export const openApiSchemas = {
       amount: { type: "number" },
       type: { type: "string", enum: ["income", "expense"] },
       category: { type: "string" },
+      isFixed: { type: "boolean" },
       description: { type: "string" },
       date: { type: "string", format: "date" },
       context: { type: "string", enum: ["personal", "household"] },
@@ -136,6 +146,7 @@ export const openApiSchemas = {
       "amount",
       "type",
       "category",
+      "isFixed",
       "description",
       "date",
       "context",
@@ -149,6 +160,7 @@ export const openApiSchemas = {
       amount: { type: "number", exclusiveMinimum: 0 },
       type: { type: "string", enum: ["income", "expense"] },
       category: { type: "string", minLength: 1 },
+      isFixed: { type: "boolean" },
       description: { type: "string", minLength: 1 },
       date: { type: "string", example: "2026-08-04" },
       context: { type: "string", enum: ["personal", "household"] },
@@ -162,11 +174,27 @@ export const openApiSchemas = {
       amount: { type: "number", exclusiveMinimum: 0 },
       type: { type: "string", enum: ["income", "expense"] },
       category: { type: "string", minLength: 1 },
+      isFixed: { type: "boolean" },
       description: { type: "string", minLength: 1 },
       date: { type: "string", example: "2026-08-04" },
       context: { type: "string", enum: ["personal", "household"] },
       ownerId: { type: "string", minLength: 1 },
     },
+  },
+  ExtendFixedTransactionsRequest: {
+    type: "object",
+    properties: {
+      context: { type: "string", enum: ["personal", "household"] },
+      month: { type: "string", example: "2026-08" },
+    },
+    required: ["context", "month"],
+  },
+  ExtendFixedTransactionsResponse: {
+    type: "object",
+    properties: {
+      created: { type: "integer", minimum: 0 },
+    },
+    required: ["created"],
   },
   Budget: {
     type: "object",
@@ -176,9 +204,10 @@ export const openApiSchemas = {
       categoryId: { type: "string" },
       amount: { type: "number" },
       spent: { type: "number" },
+      month: { type: "string", example: "2026-08" },
       context: { type: "string", enum: ["personal", "household"] },
     },
-    required: ["id", "name", "categoryId", "amount", "spent", "context"],
+    required: ["id", "name", "categoryId", "amount", "spent", "month", "context"],
   },
   CreateBudgetRequest: {
     type: "object",
@@ -186,9 +215,20 @@ export const openApiSchemas = {
       name: { type: "string", minLength: 1 },
       categoryId: { type: "string", minLength: 1 },
       amount: { type: "number", exclusiveMinimum: 0 },
+      month: { type: "string", example: "2026-08" },
       context: { type: "string", enum: ["personal", "household"] },
     },
-    required: ["name", "categoryId", "amount", "context"],
+    required: ["name", "categoryId", "amount", "month", "context"],
+  },
+  UpdateBudgetRequest: {
+    type: "object",
+    properties: {
+      name: { type: "string", minLength: 1 },
+      categoryId: { type: "string", minLength: 1 },
+      amount: { type: "number", exclusiveMinimum: 0 },
+      month: { type: "string", example: "2026-08" },
+      context: { type: "string", enum: ["personal", "household"] },
+    },
   },
   Goal: {
     type: "object",
@@ -218,15 +258,17 @@ export const openApiSchemas = {
     properties: {
       income: { type: "number" },
       expenses: { type: "number" },
+      fixedExpenses: { type: "number" },
       savings: { type: "number" },
       balance: { type: "number" },
     },
-    required: ["income", "expenses", "savings", "balance"],
+    required: ["income", "expenses", "fixedExpenses", "savings", "balance"],
   },
   HouseholdMember: {
     type: "object",
     properties: {
       memberId: { type: "string", format: "uuid" },
+      userId: { type: "string", format: "uuid", nullable: true },
       memberName: { type: "string" },
       amount: { type: "number" },
     },

@@ -44,12 +44,14 @@ create table if not exists transactions (
   amount numeric(14, 2) not null,
   type text not null check (type in ('income', 'expense')),
   category text not null,
+  is_fixed boolean not null default false,
   description text not null,
   date date not null,
   context text not null check (context in ('personal', 'household')),
   owner_id text not null,
   user_id uuid not null references users(id) on delete cascade,
   couple_id uuid references couples(id) on delete cascade,
+  recurrence_source_id uuid references transactions(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 
@@ -59,6 +61,7 @@ create table if not exists budgets (
   category_id text not null,
   amount numeric(14, 2) not null,
   spent numeric(14, 2) not null default 0,
+  month date not null default date_trunc('month', now())::date,
   context text not null check (context in ('personal', 'household')),
   user_id uuid not null references users(id) on delete cascade,
   couple_id uuid references couples(id) on delete cascade

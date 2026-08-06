@@ -23,15 +23,15 @@ const INITIAL_STATE: FinanceDashboardState = {
   error: null
 };
 
-export function useFinanceDashboard(context: FinanceContext) {
+export function useFinanceDashboard(context: FinanceContext, month: string) {
   const [state, setState] = useState<FinanceDashboardState>(INITIAL_STATE);
 
   const load = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       const [transactions, budgets, goals, householdProfile] = await Promise.all([
-        financeService.listTransactions(context),
-        financeService.listBudgets(context),
+        financeService.listTransactions(context, month),
+        financeService.listBudgets(context, month),
         financeService.listGoals(context),
         context === "household" ? financeService.getHouseholdProfile() : Promise.resolve(null)
       ]);
@@ -51,7 +51,7 @@ export function useFinanceDashboard(context: FinanceContext) {
         error: error instanceof Error ? error.message : "No se pudieron cargar tus finanzas."
       }));
     }
-  }, [context]);
+  }, [context, month]);
 
   useEffect(() => {
     void load();

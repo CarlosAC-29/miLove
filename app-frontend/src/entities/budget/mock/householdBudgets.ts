@@ -7,6 +7,7 @@ export const MOCK_HOUSEHOLD_BUDGETS: BudgetDto[] = [
     categoryId: "alimentacion",
     amount: 900_000,
     spent: 600_000,
+    month: "2026-08",
     context: "household"
   },
   {
@@ -15,6 +16,7 @@ export const MOCK_HOUSEHOLD_BUDGETS: BudgetDto[] = [
     categoryId: "hogar",
     amount: 400_000,
     spent: 250_000,
+    month: "2026-08",
     context: "household"
   },
   {
@@ -23,6 +25,7 @@ export const MOCK_HOUSEHOLD_BUDGETS: BudgetDto[] = [
     categoryId: "entretenimiento",
     amount: 500_000,
     spent: 180_000,
+    month: "2026-07",
     context: "household"
   }
 ];

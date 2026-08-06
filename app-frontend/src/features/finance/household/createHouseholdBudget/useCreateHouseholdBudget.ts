@@ -5,6 +5,7 @@ interface CreateHouseholdBudgetInput {
   name: string;
   categoryId: string;
   amount: number;
+  month: string;
 }
 
 export function useCreateHouseholdBudget(onSuccess?: () => Promise<void> | void) {

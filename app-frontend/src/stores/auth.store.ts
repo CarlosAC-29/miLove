@@ -6,13 +6,16 @@ import type {
   User
 } from "@/entities/user/types";
 import { authService } from "@/services/auth/auth.service";
+import { sessionStorageService } from "@/services/auth/session.storage";
 
 interface AuthState {
   user: User | null;
   session: AuthSession | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasHydrated: boolean;
   login: (session: AuthSession) => void;
+  updateUser: (user: User) => void;
   hydrateSession: () => void;
   signInWithEmail: (input: SignInWithEmailInput) => Promise<void>;
   signUpWithEmail: (input: SignUpWithEmailInput) => Promise<void>;
@@ -35,12 +38,20 @@ export const useAuthStore = create<AuthState>()((set, get) => {
   return {
     ...applySession(restoredSession),
     isLoading: false,
+    hasHydrated: typeof window !== "undefined",
     login: (session) => {
       set({ ...applySession(session) });
     },
+    updateUser: (user) => {
+      const currentSession = get().session;
+      if (!currentSession) return;
+      const nextSession: AuthSession = { ...currentSession, user };
+      sessionStorageService.write(nextSession);
+      set({ ...applySession(nextSession) });
+    },
     hydrateSession: () => {
       const session = authService.restoreSession();
-      set({ ...applySession(session) });
+      set({ ...applySession(session), hasHydrated: true });
     },
     signInWithEmail: async (input) => {
       set({ isLoading: true });

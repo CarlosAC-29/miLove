@@ -23,21 +23,27 @@ export const API_ROUTES = {
   },
   finance: {
     transactions: "/finance/transactions",
+    extendFixedTransactions: "/finance/transactions/extend-fixed",
     summary: "/finance/summary",
     budgets: "/finance/budgets",
+    budgetById: (id: string) => `/finance/budgets/${id}`,
     goals: "/finance/goals",
     household: "/finance/household",
     insights: "/finance/insights"
   },
-  gifts: { list: "/gifts" },
-  dates: { list: "/dates", ideas: "/dates/ideas" },
-  movies: { list: "/movies" },
-  restaurants: { list: "/restaurants" },
+  gifts: { list: "/gifts", byId: (id: string) => `/gifts/${id}` },
+  goals: { list: "/goals", byId: (id: string) => `/goals/${id}` },
+  dates: { list: "/dates", ideas: "/dates/ideas", byId: (id: string) => `/dates/${id}` },
+  plans: { list: "/plans" },
+  movies: { list: "/movies", byId: (id: string) => `/movies/${id}` },
+  restaurants: { list: "/restaurants", byId: (id: string) => `/restaurants/${id}` },
+  wishlist: { list: "/wishlist", byId: (id: string) => `/wishlist/${id}` },
   recommendations: {
     ai: "/recommendations/ai",
     context: "/recommendations/context",
     suggestions: "/recommendations/suggestions",
     generate: "/recommendations/suggestions/generate",
     accept: "/recommendations/suggestions/accept"
-  }
+  },
+  users: { me: "/users/me", partner: "/users/me/partner" }
 } as const;

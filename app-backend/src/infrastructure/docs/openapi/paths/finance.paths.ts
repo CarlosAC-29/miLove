@@ -11,6 +11,12 @@ export const financePaths = {
           required: true,
           schema: { type: "string", enum: ["personal", "household"] },
         },
+        {
+          name: "month",
+          in: "query",
+          required: false,
+          schema: { type: "string", example: "2026-08" },
+        },
       ],
       responses: {
         "200": {
@@ -51,7 +57,7 @@ export const financePaths = {
     },
   },
   "/finance/transactions/{id}": {
-    patch: {
+    put: {
       tags: ["Finance"],
       summary: "Actualizar transaccion",
       security: [{ bearerAuth: [] }],
@@ -107,6 +113,31 @@ export const financePaths = {
       },
     },
   },
+  "/finance/transactions/extend-fixed": {
+    post: {
+      tags: ["Finance"],
+      summary: "Extender movimientos fijos por tres meses",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/ExtendFixedTransactionsRequest" },
+          },
+        },
+      },
+      responses: {
+        "201": {
+          description: "Movimientos fijos extendidos",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ExtendFixedTransactionsResponse" },
+            },
+          },
+        },
+      },
+    },
+  },
   "/finance/summary": {
     get: {
       tags: ["Finance"],
@@ -118,6 +149,12 @@ export const financePaths = {
           in: "query",
           required: true,
           schema: { type: "string", enum: ["personal", "household"] },
+        },
+        {
+          name: "month",
+          in: "query",
+          required: false,
+          schema: { type: "string", example: "2026-08" },
         },
       ],
       responses: {
@@ -143,6 +180,12 @@ export const financePaths = {
           in: "query",
           required: true,
           schema: { type: "string", enum: ["personal", "household"] },
+        },
+        {
+          name: "month",
+          in: "query",
+          required: false,
+          schema: { type: "string", example: "2026-08" },
         },
       ],
       responses: {
@@ -177,6 +220,71 @@ export const financePaths = {
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/Budget" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/finance/budgets/{id}": {
+    put: {
+      tags: ["Finance"],
+      summary: "Actualizar presupuesto",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/UpdateBudgetRequest" },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "Presupuesto actualizado",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/Budget" },
+            },
+          },
+        },
+        "404": {
+          description: "Presupuesto no encontrado",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
+            },
+          },
+        },
+      },
+    },
+    delete: {
+      tags: ["Finance"],
+      summary: "Eliminar presupuesto",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        "204": { description: "Presupuesto eliminado" },
+        "404": {
+          description: "Presupuesto no encontrado",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
             },
           },
         },
@@ -252,7 +360,7 @@ export const financePaths = {
     },
   },
   "/finance/household/contributions/{memberId}": {
-    patch: {
+    put: {
       tags: ["Finance"],
       summary: "Actualizar aporte de miembro",
       security: [{ bearerAuth: [] }],
@@ -303,6 +411,12 @@ export const financePaths = {
           in: "query",
           required: false,
           schema: { type: "string", enum: ["personal", "household"], default: "personal" },
+        },
+        {
+          name: "month",
+          in: "query",
+          required: false,
+          schema: { type: "string", example: "2026-08" },
         },
       ],
       responses: {

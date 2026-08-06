@@ -13,6 +13,7 @@ interface EmailLoginFormState {
   name: string;
   email: string;
   password: string;
+  registrationCode: string;
 }
 
 export function LoginForm({ mode }: LoginFormProps) {
@@ -21,7 +22,8 @@ export function LoginForm({ mode }: LoginFormProps) {
   const [form, setForm] = useState<EmailLoginFormState>({
     name: "",
     email: "",
-    password: ""
+    password: "",
+    registrationCode: ""
   });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -33,7 +35,8 @@ export function LoginForm({ mode }: LoginFormProps) {
         await registerWithEmail({
           name: form.name.trim(),
           email: form.email.trim(),
-          password: form.password
+          password: form.password,
+          registrationCode: form.registrationCode
         });
         return;
       }
@@ -61,6 +64,20 @@ export function LoginForm({ mode }: LoginFormProps) {
           placeholder="Tu nombre"
           required
           minLength={2}
+          className="h-11 rounded-xl bg-surface"
+        />
+      ) : null}
+
+      {mode === "register" ? (
+        <Input
+          type="password"
+          value={form.registrationCode}
+          onChange={(event) =>
+            setForm((prev) => ({ ...prev, registrationCode: event.target.value }))
+          }
+          autoComplete="off"
+          placeholder="Codigo de registro"
+          required
           className="h-11 rounded-xl bg-surface"
         />
       ) : null}

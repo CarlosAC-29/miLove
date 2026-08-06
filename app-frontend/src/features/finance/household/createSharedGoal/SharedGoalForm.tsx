@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatMoneyInput, parseMoneyInput } from "@/shared/lib/money-input";
 import { useCreateSharedGoal } from "./useCreateSharedGoal";
 
 interface SharedGoalFormProps {
@@ -18,8 +19,8 @@ export function SharedGoalForm({ onSaved }: SharedGoalFormProps) {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    const target = Number(targetAmount);
-    const current = Number(currentAmount || "0");
+    const target = parseMoneyInput(targetAmount);
+    const current = currentAmount.trim().length > 0 ? parseMoneyInput(currentAmount) : 0;
 
     if (!Number.isFinite(target) || target <= 0) {
       setError("La meta debe ser mayor a 0.");
@@ -54,19 +55,19 @@ export function SharedGoalForm({ onSaved }: SharedGoalFormProps) {
       <div className="grid grid-cols-2 gap-2">
         <Input
           value={targetAmount}
-          onChange={(event) => setTargetAmount(event.target.value)}
+          onChange={(event) => setTargetAmount(formatMoneyInput(event.target.value))}
           placeholder="Objetivo total"
-          type="number"
-          min={1}
+          type="text"
+          inputMode="numeric"
           required
           className="h-10 rounded-xl bg-surface"
         />
         <Input
           value={currentAmount}
-          onChange={(event) => setCurrentAmount(event.target.value)}
+          onChange={(event) => setCurrentAmount(formatMoneyInput(event.target.value))}
           placeholder="Ahorrado"
-          type="number"
-          min={0}
+          type="text"
+          inputMode="numeric"
           className="h-10 rounded-xl bg-surface"
         />
       </div>

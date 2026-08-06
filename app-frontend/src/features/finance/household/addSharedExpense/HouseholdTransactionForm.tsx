@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -8,28 +9,46 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { CATEGORIES } from "@/entities/category/types";
+import { CATEGORIES, INCOME_CATEGORIES } from "@/entities/category/types";
 import type { TransactionType } from "@/entities/transaction/types";
+import { formatMoneyInput, parseMoneyInput } from "@/shared/lib/money-input";
 import { useAddSharedExpense } from "./useAddSharedExpense";
 
 interface HouseholdTransactionFormProps {
   onSaved?: () => Promise<void> | void;
+  initialType?: TransactionType;
 }
 
-export function HouseholdTransactionForm({ onSaved }: HouseholdTransactionFormProps) {
+export function HouseholdTransactionForm({
+  onSaved,
+  initialType = "expense"
+}: HouseholdTransactionFormProps) {
   const { isSubmitting, addSharedExpense } = useAddSharedExpense(onSaved);
   const [error, setError] = useState<string | null>(null);
-  const [type, setType] = useState<TransactionType>("expense");
+  const [type, setType] = useState<TransactionType>(initialType);
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("hogar");
+  const [category, setCategory] = useState(initialType === "income" ? "freelance" : "hogar");
   const [ownerId, setOwnerId] = useState("usr-carlos");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
+  const [isFixed, setIsFixed] = useState(false);
+
+  useEffect(() => {
+    setType(initialType);
+    setCategory(initialType === "income" ? "freelance" : "hogar");
+    setIsFixed(false);
+  }, [initialType]);
+
+  const handleTypeChange = (value: TransactionType) => {
+    setType(value);
+    setCategory(value === "income" ? "freelance" : "hogar");
+    setIsFixed(false);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    const numericAmount = Number(amount);
+    const numericAmount = parseMoneyInput(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError("El monto debe ser mayor a 0.");
       return;
@@ -40,12 +59,14 @@ export function HouseholdTransactionForm({ onSaved }: HouseholdTransactionFormPr
         amount: numericAmount,
         type,
         category,
+        isFixed,
         ownerId,
         date,
         description: description.trim()
       });
       setAmount("");
       setDescription("");
+      setIsFixed(false);
     } catch (caughtError) {
       setError(
         caughtError instanceof Error ? caughtError.message : "No se pudo crear la transaccion."
@@ -55,8 +76,19 @@ export function HouseholdTransactionForm({ onSaved }: HouseholdTransactionFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-surface px-3 py-2">
+        <Checkbox
+          checked={isFixed}
+          onCheckedChange={(checked) => setIsFixed(Boolean(checked))}
+          id="household-fixed-transaction"
+        />
+        <label htmlFor="household-fixed-transaction" className="text-sm">
+          {type === "income" ? "Marcar como ingreso fijo mensual" : "Marcar como gasto fijo mensual"}
+        </label>
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
-        <Select value={type} onValueChange={(value) => setType(value as TransactionType)}>
+        <Select value={type} onValueChange={(value) => handleTypeChange(value as TransactionType)}>
           <SelectTrigger className="h-10 rounded-xl bg-surface">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
@@ -67,21 +99,28 @@ export function HouseholdTransactionForm({ onSaved }: HouseholdTransactionFormPr
         </Select>
         <Input
           value={amount}
-          onChange={(event) => setAmount(event.target.value)}
+          onChange={(event) => setAmount(formatMoneyInput(event.target.value))}
           placeholder="Monto"
-          type="number"
-          min={1}
+          type="text"
+          inputMode="numeric"
           required
           className="h-10 rounded-xl bg-surface"
         />
       </div>
 
-      <Select value={category} onValueChange={setCategory}>
+      <Select
+        value={category}
+        onValueChange={setCategory}
+        disabled={isFixed}
+      >
         <SelectTrigger className="h-10 rounded-xl bg-surface">
           <SelectValue placeholder="Categoria" />
         </SelectTrigger>
         <SelectContent>
-          {CATEGORIES.map((item) => (
+          {(type === "income"
+            ? INCOME_CATEGORIES
+            : CATEGORIES.filter((item) => item.id !== "ingresos")
+          ).map((item) => (
             <SelectItem key={item.id} value={item.id}>
               {item.name}
             </SelectItem>

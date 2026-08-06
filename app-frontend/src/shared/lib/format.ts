@@ -9,11 +9,16 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+function parseDateOnly(value: string): Date {
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(APP_CONFIG.locale, {
     day: "2-digit",
     month: "short"
-  }).format(new Date(iso));
+  }).format(parseDateOnly(iso));
 }
 
 export function formatLongDate(iso: string): string {
@@ -21,5 +26,5 @@ export function formatLongDate(iso: string): string {
     weekday: "long",
     day: "numeric",
     month: "long"
-  }).format(new Date(iso));
+  }).format(parseDateOnly(iso));
 }

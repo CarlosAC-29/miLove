@@ -11,7 +11,7 @@ import {
 } from "@/entities/transaction/types";
 import { MOCK_PERSONAL_TRANSACTIONS } from "@/entities/transaction/mock/personalTransactions";
 import { MOCK_HOUSEHOLD_TRANSACTIONS } from "@/entities/transaction/mock/householdTransactions";
-import { mapBudget, type Budget, type BudgetDto } from "@/entities/budget/types";
+import { mapBudget, type Budget, type BudgetDto, type UpdateBudgetInput } from "@/entities/budget/types";
 import { MOCK_PERSONAL_BUDGETS } from "@/entities/budget/mock/personalBudgets";
 import { MOCK_HOUSEHOLD_BUDGETS } from "@/entities/budget/mock/householdBudgets";
 import { mapGoal, type Goal, type GoalDto } from "@/entities/goal/types";
@@ -38,21 +38,29 @@ function sortByDateDesc(a: TransactionDto, b: TransactionDto): number {
   return b.date.localeCompare(a.date);
 }
 
+function normalizeMonth(date: string): string {
+  return date.slice(0, 7);
+}
+
+function appliesToMonth(transaction: TransactionDto, month: string): boolean {
+  return normalizeMonth(transaction.date) === month;
+}
+
 /**
  * Servicio financiero. Único punto de acceso a datos del módulo:
  * Componente -> Hook -> financeService -> (mock | API REST).
  */
 export const financeService = {
-  async listTransactions(context: FinanceContext): Promise<Transaction[]> {
+  async listTransactions(context: FinanceContext, month: string): Promise<Transaction[]> {
     if (env.useMocks) {
       await delay();
       return memory.transactions
-        .filter((t) => t.context === context)
+        .filter((t) => t.context === context && appliesToMonth(t, month))
         .sort(sortByDateDesc)
         .map(mapTransaction);
     }
     const dtos = await apiClient.get<TransactionDto[]>(API_ROUTES.finance.transactions, {
-      query: { context }
+      query: { context, month }
     });
     return dtos.map(mapTransaction);
   },
@@ -62,15 +70,68 @@ export const financeService = {
       await delay(300);
       const dto: TransactionDto = {
         ...input,
+        isFixed: input.isFixed ?? false,
         id: `tx-${Date.now()}`,
         createdAt: new Date().toISOString()
       };
       memory.transactions = [dto, ...memory.transactions];
-      applyBudgetSpend(dto, 1);
       return mapTransaction(dto);
     }
     const dto = await apiClient.post<TransactionDto>(API_ROUTES.finance.transactions, input);
     return mapTransaction(dto);
+  },
+
+  async extendFixedTransactions(context: FinanceContext, month: string): Promise<number> {
+    if (env.useMocks) {
+      await delay(300);
+      const fixedTransactions = memory.transactions.filter(
+        (transaction) =>
+          transaction.context === context &&
+          transaction.isFixed &&
+          normalizeMonth(transaction.date) === month
+      );
+      const copies = fixedTransactions.flatMap((transaction) =>
+        [1, 2, 3]
+          .map((offset) => {
+            const date = new Date(`${month}-01T00:00:00Z`);
+            date.setUTCMonth(date.getUTCMonth() + offset);
+            const lastDay = new Date(
+              Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)
+            ).getUTCDate();
+            const day = Math.min(Number(transaction.date.slice(8, 10)), lastDay);
+            const nextDate = new Date(
+              Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), day)
+            )
+              .toISOString()
+              .slice(0, 10);
+            return {
+              ...transaction,
+              id: `${transaction.id}-${nextDate}`,
+              date: nextDate,
+              createdAt: new Date().toISOString()
+            };
+          })
+          .filter(
+            (copy) =>
+              !memory.transactions.some(
+                (transaction) =>
+                  transaction.id === copy.id ||
+                  (transaction.description === copy.description &&
+                    transaction.context === copy.context &&
+                    transaction.type === copy.type &&
+                    transaction.isFixed &&
+                    transaction.date === copy.date)
+              )
+          )
+      );
+      memory.transactions = [...copies, ...memory.transactions];
+      return copies.length;
+    }
+    const response = await apiClient.post<{ created: number }>(
+      API_ROUTES.finance.extendFixedTransactions,
+      { context, month }
+    );
+    return response.created;
   },
 
   async updateTransaction(
@@ -81,13 +142,11 @@ export const financeService = {
       await delay(300);
       const current = memory.transactions.find((t) => t.id === id);
       if (!current) throw new Error("La transacción no existe.");
-      applyBudgetSpend(current, -1);
       const updated: TransactionDto = { ...current, ...changes };
       memory.transactions = memory.transactions.map((t) => (t.id === id ? updated : t));
-      applyBudgetSpend(updated, 1);
       return mapTransaction(updated);
     }
-    const dto = await apiClient.patch<TransactionDto>(
+    const dto = await apiClient.put<TransactionDto>(
       `${API_ROUTES.finance.transactions}/${id}`,
       changes
     );
@@ -97,21 +156,38 @@ export const financeService = {
   async deleteTransaction(id: string): Promise<void> {
     if (env.useMocks) {
       await delay(250);
-      const current = memory.transactions.find((t) => t.id === id);
-      if (current) applyBudgetSpend(current, -1);
       memory.transactions = memory.transactions.filter((t) => t.id !== id);
       return;
     }
     await apiClient.delete(`${API_ROUTES.finance.transactions}/${id}`);
   },
 
-  async listBudgets(context: FinanceContext): Promise<Budget[]> {
+  async listBudgets(context: FinanceContext, month: string): Promise<Budget[]> {
     if (env.useMocks) {
       await delay();
-      return memory.budgets.filter((b) => b.context === context).map(mapBudget);
+      const monthlyExpenses = memory.transactions
+        .filter(
+          (transaction) =>
+            transaction.context === context &&
+            transaction.type === "expense" &&
+            appliesToMonth(transaction, month)
+        )
+        .reduce<Record<string, number>>((acc, transaction) => {
+          acc[transaction.category] = (acc[transaction.category] ?? 0) + transaction.amount;
+          return acc;
+        }, {});
+
+      return memory.budgets
+        .filter((budget) => budget.context === context && budget.month === month)
+        .map((budget) =>
+          mapBudget({
+            ...budget,
+            spent: monthlyExpenses[budget.categoryId] ?? 0
+          })
+        );
     }
     const dtos = await apiClient.get<BudgetDto[]>(API_ROUTES.finance.budgets, {
-      query: { context }
+      query: { context, month }
     });
     return dtos.map(mapBudget);
   },
@@ -125,6 +201,28 @@ export const financeService = {
     }
     const dto = await apiClient.post<BudgetDto>(API_ROUTES.finance.budgets, input);
     return mapBudget(dto);
+  },
+
+  async updateBudget(id: string, changes: UpdateBudgetInput): Promise<Budget> {
+    if (env.useMocks) {
+      await delay(300);
+      const current = memory.budgets.find((budget) => budget.id === id);
+      if (!current) throw new Error("El presupuesto no existe.");
+      const updated: BudgetDto = { ...current, ...changes };
+      memory.budgets = memory.budgets.map((budget) => (budget.id === id ? updated : budget));
+      return mapBudget(updated);
+    }
+    const dto = await apiClient.put<BudgetDto>(API_ROUTES.finance.budgetById(id), changes);
+    return mapBudget(dto);
+  },
+
+  async deleteBudget(id: string): Promise<void> {
+    if (env.useMocks) {
+      await delay(250);
+      memory.budgets = memory.budgets.filter((budget) => budget.id !== id);
+      return;
+    }
+    await apiClient.delete(API_ROUTES.finance.budgetById(id));
   },
 
   async listGoals(context: FinanceContext): Promise<Goal[]> {
@@ -167,19 +265,10 @@ export const financeService = {
       };
       return mapHouseholdProfile(memory.household);
     }
-    const dto = await apiClient.patch<HouseholdProfileDto>(
+    const dto = await apiClient.put<HouseholdProfileDto>(
       `${API_ROUTES.finance.household}/contributions/${memberId}`,
       { amount }
     );
     return mapHouseholdProfile(dto);
   }
 };
-
-function applyBudgetSpend(transaction: TransactionDto, sign: 1 | -1): void {
-  if (transaction.type !== "expense") return;
-  memory.budgets = memory.budgets.map((budget) =>
-    budget.context === transaction.context && budget.categoryId === transaction.category
-      ? { ...budget, spent: Math.max(0, budget.spent + sign * transaction.amount) }
-      : budget
-  );
-}

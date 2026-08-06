@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+import { env } from "../../config/env.js";
 import { HttpError } from "../../shared/errors/http-error.js";
 import { authRepository, type DbProfile } from "./auth.repository.js";
 import { supabaseAdmin, supabaseAuth } from "../../infrastructure/supabase/client.js";
@@ -37,8 +39,24 @@ async function ensureProfile(input: {
   return authRepository.upsertProfile(input);
 }
 
+function validateRegistrationCode(code: string) {
+  const configuredCode = env.REGISTRATION_CODE;
+  if (!configuredCode) {
+    throw new HttpError(503, "Registration is currently unavailable.");
+  }
+
+  const submittedCode = Buffer.from(code);
+  const expectedCode = Buffer.from(configuredCode);
+  const isValid =
+    submittedCode.length === expectedCode.length && timingSafeEqual(submittedCode, expectedCode);
+  if (!isValid) {
+    throw new HttpError(403, "Invalid registration code.");
+  }
+}
+
 export const authService = {
-  async register(input: { name: string; email: string; password: string }) {
+  async register(input: { name: string; email: string; password: string; registrationCode: string }) {
+    validateRegistrationCode(input.registrationCode);
     const email = input.email.toLowerCase();
     const { data, error } = await supabaseAuth.auth.signUp({
       email,

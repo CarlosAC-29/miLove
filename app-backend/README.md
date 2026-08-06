@@ -104,6 +104,8 @@ Migración inicial incluida:
 
 ### Users
 - `GET /users/me`
+- `PUT /users/me`
+- `GET /users/me/partner`
 
 ### Couples
 - `GET /couples`
@@ -113,7 +115,7 @@ Migración inicial incluida:
 ### Finance
 - `GET /finance/transactions?context=personal|household`
 - `POST /finance/transactions`
-- `PATCH /finance/transactions/:id`
+- `PUT /finance/transactions/:id`
 - `DELETE /finance/transactions/:id`
 - `GET /finance/summary?context=personal|household`
 - `GET /finance/budgets?context=personal|household`
@@ -121,7 +123,7 @@ Migración inicial incluida:
 - `GET /finance/goals?context=personal|household`
 - `POST /finance/goals`
 - `GET /finance/household`
-- `PATCH /finance/household/contributions/:memberId`
+- `PUT /finance/household/contributions/:memberId`
 - `GET /finance/insights?context=personal|household`
 
 ### Recommendations

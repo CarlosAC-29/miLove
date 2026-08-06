@@ -41,6 +41,7 @@ export interface SignUpWithEmailInput {
   readonly name: string;
   readonly email: string;
   readonly password: string;
+  readonly registrationCode: string;
 }
 
 export function mapUser(dto: UserDto): User {

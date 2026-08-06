@@ -6,6 +6,7 @@ export const upsertContextSchema = z.object({
 
 export const generateSuggestionsSchema = z.object({
   context: z.string().min(10).max(2000).optional(),
+  category: z.enum(["date", "restaurant", "activity", "gift", "trip"]).optional(),
 });
 
 export const listSuggestionsQuerySchema = z

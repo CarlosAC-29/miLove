@@ -6,6 +6,7 @@ export interface BudgetDto {
   categoryId: string;
   amount: number;
   spent: number;
+  month: string;
   context: FinanceContext;
 }
 
@@ -15,8 +16,13 @@ export interface Budget {
   readonly categoryId: string;
   readonly amount: number;
   readonly spent: number;
+  readonly month: string;
   readonly context: FinanceContext;
 }
+
+export type UpdateBudgetInput = Partial<
+  Pick<BudgetDto, "name" | "categoryId" | "amount" | "month" | "context">
+>;
 
 export function mapBudget(dto: BudgetDto): Budget {
   return { ...dto };

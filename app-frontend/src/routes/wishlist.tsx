@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoonPage } from "@/pages/ComingSoon/ComingSoonPage";
+import { WishlistPage } from "@/pages/Wishlist/WishlistPage";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
@@ -16,5 +16,5 @@ export const Route = createFileRoute("/wishlist")({
       }
     ]
   }),
-  component: () => <ComingSoonPage title="Lista de deseos" subtitle="Lo que sueñan tener o hacer" />
+  component: WishlistPage
 });

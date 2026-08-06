@@ -14,6 +14,8 @@ const configuredOrigins = env.CORS_ORIGIN.split(",")
   .map((origin) => normalizeOrigin(origin.trim()))
   .filter((origin) => origin.length > 0);
 const allowAnyOrigin = configuredOrigins.includes("*");
+const isLocalDevelopmentOrigin = (origin: string): boolean =>
+  env.NODE_ENV === "development" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 app.use(
   cors({
@@ -24,7 +26,10 @@ app.use(
       }
 
       const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
-      if (configuredOrigins.includes(normalizedRequestOrigin)) {
+      if (
+        configuredOrigins.includes(normalizedRequestOrigin) ||
+        isLocalDevelopmentOrigin(normalizedRequestOrigin)
+      ) {
         callback(null, true);
         return;
       }

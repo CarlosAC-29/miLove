@@ -1,4 +1,4 @@
-import type { AuthSession } from "@/entities/user/types";
+﻿import type { AuthSession } from "@/entities/user/types";
 
 const STORAGE_KEY = "milove.session";
 
@@ -24,9 +24,15 @@ export const sessionStorageService = {
     if (typeof window === "undefined") return;
     window.localStorage.removeItem(STORAGE_KEY);
   },
+  isExpired(session: AuthSession): boolean {
+    if (!session.expiresAt) return false;
+    const expiresAtMs = new Date(session.expiresAt).getTime();
+    if (Number.isNaN(expiresAtMs)) return false;
+    return expiresAtMs <= Date.now();
+  },
   /** Authorization header used by API services once backend JWT is enabled. */
   authHeader(): Record<string, string> {
     const session = this.read();
-    return session ? { Authorization: `Bearer ${session.accessToken}` } : {};
+    return session ? { Authorization: 'Bearer ' + session.accessToken } : {};
   }
 };

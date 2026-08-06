@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { HouseholdProfile } from "@/entities/finance-profile/types";
 import { formatCurrency } from "@/shared/lib/format";
+import { formatMoneyInput, parseMoneyInput } from "@/shared/lib/money-input";
 import { useManageContributions } from "./useManageContributions";
 
 interface ContributionManagerProps {
@@ -57,14 +58,14 @@ function ContributionRow({
   loading: boolean;
   onSave: (amount: number) => Promise<void>;
 }) {
-  const [amount, setAmount] = useState(String(defaultAmount));
+  const [amount, setAmount] = useState(formatMoneyInput(String(defaultAmount)));
 
   return (
     <form
       className="grid grid-cols-[1fr_auto] items-center gap-2"
       onSubmit={async (event) => {
         event.preventDefault();
-        const numericAmount = Number(amount);
+        const numericAmount = parseMoneyInput(amount);
         if (!Number.isFinite(numericAmount) || numericAmount < 0) return;
         await onSave(numericAmount);
       }}
@@ -78,9 +79,9 @@ function ContributionRow({
       <div className="flex items-center gap-2">
         <Input
           value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          type="number"
-          min={0}
+          onChange={(event) => setAmount(formatMoneyInput(event.target.value))}
+          type="text"
+          inputMode="numeric"
           className="h-9 w-28 rounded-xl bg-surface text-right"
         />
         <Button type="submit" size="sm" variant="outline" disabled={loading}>

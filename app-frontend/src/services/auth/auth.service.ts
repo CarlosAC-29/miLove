@@ -96,6 +96,11 @@ export const authService = {
 
   /** Restaura la sesión al abrir la app (futuro: validar/refrescar el JWT). */
   restoreSession(): AuthSession | null {
-    return sessionStorageService.read();
+    const session = sessionStorageService.read();
+    if (!session) return null;
+    if (!sessionStorageService.isExpired(session)) return session;
+    if (session.refreshToken) return session;
+    sessionStorageService.clear();
+    return null;
   }
 };

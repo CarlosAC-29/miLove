@@ -24,6 +24,7 @@ export const recommendationsController = {
     const body = generateSuggestionsSchema.parse(request.body);
     const data = await recommendationsService.generateSuggestions(request.auth!.sub, {
       context: body.context?.trim(),
+      category: body.category,
     });
     return response.status(201).json(data);
   },

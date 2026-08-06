@@ -56,6 +56,7 @@ export interface UpsertRecommendationContextInput {
 
 export interface GenerateSuggestionsInput {
   context?: string;
+  category?: SuggestionCategory;
 }
 
 export interface AcceptSuggestionsInput {
