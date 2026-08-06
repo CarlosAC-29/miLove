@@ -65,7 +65,12 @@ export const financeRepository = {
     };
   },
 
-  async extendFixedTransactions(userId: string, context: FinanceContext, month: string) {
+  async extendFixedTransactions(
+    userId: string,
+    context: FinanceContext,
+    month: string,
+    fixedCategories: readonly string[],
+  ) {
     const result = await db.query(
       `with source_transactions as (
          select
@@ -83,8 +88,8 @@ export const financeRepository = {
          from transactions
          where user_id = $1
            and context = $2
-           and is_fixed = true
            and to_char(date, 'YYYY-MM') = $3
+           and category = any($4::text[])
        ),
        future_months as (
          select (date_trunc('month', ($3 || '-01')::date) + (month_offset || ' months')::interval)::date as month_start
@@ -128,7 +133,7 @@ export const financeRepository = {
          where recurrence_source_id is not null
          do nothing
        returning id`,
-      [userId, context, month],
+      [userId, context, month, fixedCategories],
     );
     return result.rowCount ?? 0;
   },

@@ -19,21 +19,33 @@ interface PersonalTransactionFormProps {
   initialType?: TransactionType;
 }
 
+function getDefaultCategory(type: TransactionType) {
+  return type === "income" ? "freelance" : "alimentacion";
+}
+
+function getFixedCategory(type: TransactionType) {
+  return type === "income" ? "ingresos_fijos" : "gastos_fijos";
+}
+
 export function PersonalTransactionForm({ onSaved, initialType = "expense" }: PersonalTransactionFormProps) {
   const { isSubmitting, addPersonalTransaction } = useAddPersonalTransaction(onSaved);
   const [error, setError] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState(initialType === "income" ? "freelance" : "alimentacion");
+  const [category, setCategory] = useState(getDefaultCategory(initialType));
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
   const [isFixed, setIsFixed] = useState(false);
+  const type = initialType;
 
   useEffect(() => {
-    setCategory(initialType === "income" ? "freelance" : "alimentacion");
+    setCategory(getDefaultCategory(initialType));
     setIsFixed(false);
   }, [initialType]);
 
-  const type = initialType;
+  const handleFixedChange = (checked: boolean) => {
+    setIsFixed(checked);
+    setCategory(checked ? getFixedCategory(type) : getDefaultCategory(type));
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,6 +68,7 @@ export function PersonalTransactionForm({ onSaved, initialType = "expense" }: Pe
       setAmount("");
       setDescription("");
       setIsFixed(false);
+      setCategory(getDefaultCategory(type));
     } catch (caughtError) {
       setError(
         caughtError instanceof Error ? caughtError.message : "No se pudo crear la transaccion."
@@ -68,7 +81,7 @@ export function PersonalTransactionForm({ onSaved, initialType = "expense" }: Pe
       <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-surface px-3 py-2">
         <Checkbox
           checked={isFixed}
-          onCheckedChange={(checked) => setIsFixed(Boolean(checked))}
+          onCheckedChange={(checked) => handleFixedChange(Boolean(checked))}
           id="personal-fixed-transaction"
         />
         <label htmlFor="personal-fixed-transaction" className="text-sm">
@@ -89,6 +102,7 @@ export function PersonalTransactionForm({ onSaved, initialType = "expense" }: Pe
       <Select
         value={category}
         onValueChange={setCategory}
+        disabled={isFixed}
       >
         <SelectTrigger className="h-10 rounded-xl bg-surface">
           <SelectValue placeholder="Categoria" />

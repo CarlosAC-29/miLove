@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { z } from "zod";
 import { financeService } from "./finance.service.js";
 import {
   createBudgetSchema,
@@ -100,7 +101,15 @@ export const financeController = {
   async insights(request: Request, response: Response) {
     const context = financeContextSchema.parse(request.query.context ?? "personal");
     const month = financeMonthSchema.optional().parse(request.query.month);
-    const data = await financeService.getInsights(request.auth!.sub, context, month);
+    const suggestionIndex = z.coerce.number().int().nonnegative().catch(0).parse(
+      request.query.suggestionIndex,
+    );
+    const data = await financeService.getInsights(
+      request.auth!.sub,
+      context,
+      month,
+      suggestionIndex,
+    );
     return response.json(data);
   },
 };

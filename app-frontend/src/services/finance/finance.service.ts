@@ -92,7 +92,8 @@ export const financeService = {
       const fixedTransactions = memory.transactions.filter(
         (transaction) =>
           transaction.context === context &&
-          transaction.isFixed &&
+          (transaction.category === "gastos_fijos" ||
+            transaction.category === "ingresos_fijos") &&
           normalizeMonth(transaction.date) === month
       );
       const copies = fixedTransactions.flatMap((transaction) =>
@@ -277,7 +278,11 @@ export const financeService = {
     return mapHouseholdProfile(dto);
   },
 
-  async getInsights(context: FinanceContext, month: string): Promise<FinanceInsightDto[]> {
+  async getInsights(
+    context: FinanceContext,
+    month: string,
+    suggestionIndex = 0
+  ): Promise<FinanceInsightDto[]> {
     if (env.useMocks) {
       await delay();
       const expenses = memory.transactions
@@ -288,15 +293,15 @@ export const financeService = {
             appliesToMonth(transaction, month)
         )
         .reduce((total, transaction) => total + transaction.amount, 0);
-      return [
-        {
-          title: "Financial AI Assistant",
-          message: `Este mes llevas ${expenses.toLocaleString("es-CO")} en gastos. Revisa tus gastos pequeños para identificar una oportunidad de ahorro.`
-        }
+      const messages = [
+        `Este mes llevas ${expenses.toLocaleString("es-CO")} en gastos. Revisa tus gastos pequeños para identificar una oportunidad de ahorro.`,
+        `Tu gasto mensual actual es de ${expenses.toLocaleString("es-CO")}. Define un límite semanal para tener mayor control.`,
+        `Revisa las categorías con compras frecuentes: pequeños ajustes pueden ayudarte a reducir los ${expenses.toLocaleString("es-CO")} gastados este mes.`
       ];
+      return [{ title: "Financial AI Assistant", message: messages[suggestionIndex % messages.length]! }];
     }
     return apiClient.get<FinanceInsightDto[]>(API_ROUTES.finance.insights, {
-      query: { context, month }
+      query: { context, month, suggestionIndex }
     });
   }
 };

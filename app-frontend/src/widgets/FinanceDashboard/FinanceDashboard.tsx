@@ -279,7 +279,14 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
             variant="outline"
             className="h-20 flex-col gap-1 rounded-xl whitespace-normal"
             onClick={() => setIsExtendConfirmationOpen(true)}
-            disabled={isExtendingFixedTransactions || !transactions.some((transaction) => transaction.isFixed)}
+            disabled={
+              isExtendingFixedTransactions ||
+              !transactions.some(
+                (transaction) =>
+                  transaction.category === "gastos_fijos" ||
+                  transaction.category === "ingresos_fijos"
+              )
+            }
           >
             <CalendarPlus className="size-5" />
             <span className="text-center text-xs leading-tight">Mantener fijos 3 meses</span>

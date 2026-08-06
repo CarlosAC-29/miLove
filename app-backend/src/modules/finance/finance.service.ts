@@ -50,7 +50,12 @@ export const financeService = {
     userId: string,
     input: { context: FinanceContext; month: string },
   ) {
-    return financeRepository.extendFixedTransactions(userId, input.context, input.month);
+    return financeRepository.extendFixedTransactions(
+      userId,
+      input.context,
+      input.month,
+      ["gastos_fijos", "ingresos_fijos"],
+    );
   },
 
   async updateTransaction(userId: string, id: string, patch: Record<string, unknown>) {
@@ -143,14 +148,24 @@ export const financeService = {
     return this.getHouseholdProfile(userId);
   },
 
-  async getInsights(userId: string, context: FinanceContext, month?: string) {
+  async getInsights(
+    userId: string,
+    context: FinanceContext,
+    month?: string,
+    suggestionIndex = 0,
+  ) {
     const summary = await this.getSummary(userId, context, month);
     const potential = Math.round(summary.expenses * 0.1);
     const monthLabel = month ?? new Date().toISOString().slice(0, 7);
+    const messages = [
+      `En ${monthLabel} llevas ${summary.expenses.toLocaleString("es-CO")} en gastos. Podrías ahorrar aproximadamente ${potential.toLocaleString("es-CO")} si recortas gastos pequeños.`,
+      `Tus gastos de ${monthLabel} suman ${summary.expenses.toLocaleString("es-CO")}. Establece un límite semanal para mantenerlos bajo control.`,
+      `Revisa las categorías con pagos frecuentes este mes. Reducir compras no esenciales puede mejorar tu balance de ${summary.balance.toLocaleString("es-CO")}.`,
+    ];
     return [
       {
         title: "Financial AI Assistant",
-        message: `En ${monthLabel} llevas ${summary.expenses.toLocaleString("es-CO")} en gastos. Podrías ahorrar aproximadamente ${potential.toLocaleString("es-CO")} si recortas gastos pequeños.`,
+        message: messages[suggestionIndex % messages.length]!,
       },
     ];
   },

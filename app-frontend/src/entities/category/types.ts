@@ -13,12 +13,14 @@ export const CATEGORIES: readonly Category[] = [
   { id: "salud", name: "Salud", color: "chart-3" },
   { id: "educacion", name: "Educación", color: "chart-5" },
   { id: "hogar", name: "Hogar", color: "chart-4" },
+  { id: "gastos_fijos", name: "Gastos fijos", color: "chart-3" },
   { id: "ahorro", name: "Ahorro", color: "chart-1" },
   { id: "ingresos", name: "Ingresos", color: "chart-3" },
   { id: "otros", name: "Otros", color: "chart-2" }
 ] as const;
 
 export const INCOME_CATEGORIES: readonly Category[] = [
+  { id: "ingresos_fijos", name: "Ingresos fijos", color: "chart-3" },
   { id: "freelance", name: "Freelance", color: "chart-3" },
   { id: "regalo", name: "Regalo", color: "chart-2" },
   { id: "otro", name: "Otro", color: "chart-4" }

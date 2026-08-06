@@ -19,6 +19,14 @@ interface HouseholdTransactionFormProps {
   initialType?: TransactionType;
 }
 
+function getDefaultCategory(type: TransactionType) {
+  return type === "income" ? "freelance" : "hogar";
+}
+
+function getFixedCategory(type: TransactionType) {
+  return type === "income" ? "ingresos_fijos" : "gastos_fijos";
+}
+
 export function HouseholdTransactionForm({
   onSaved,
   initialType = "expense"
@@ -27,7 +35,7 @@ export function HouseholdTransactionForm({
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState<TransactionType>(initialType);
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState(initialType === "income" ? "freelance" : "hogar");
+  const [category, setCategory] = useState(getDefaultCategory(initialType));
   const [ownerId, setOwnerId] = useState("usr-carlos");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
@@ -35,14 +43,19 @@ export function HouseholdTransactionForm({
 
   useEffect(() => {
     setType(initialType);
-    setCategory(initialType === "income" ? "freelance" : "hogar");
+    setCategory(getDefaultCategory(initialType));
     setIsFixed(false);
   }, [initialType]);
 
   const handleTypeChange = (value: TransactionType) => {
     setType(value);
-    setCategory(value === "income" ? "freelance" : "hogar");
+    setCategory(getDefaultCategory(value));
     setIsFixed(false);
+  };
+
+  const handleFixedChange = (checked: boolean) => {
+    setIsFixed(checked);
+    setCategory(checked ? getFixedCategory(type) : getDefaultCategory(type));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -67,6 +80,7 @@ export function HouseholdTransactionForm({
       setAmount("");
       setDescription("");
       setIsFixed(false);
+      setCategory(getDefaultCategory(type));
     } catch (caughtError) {
       setError(
         caughtError instanceof Error ? caughtError.message : "No se pudo crear la transaccion."
@@ -79,7 +93,7 @@ export function HouseholdTransactionForm({
       <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-surface px-3 py-2">
         <Checkbox
           checked={isFixed}
-          onCheckedChange={(checked) => setIsFixed(Boolean(checked))}
+          onCheckedChange={(checked) => handleFixedChange(Boolean(checked))}
           id="household-fixed-transaction"
         />
         <label htmlFor="household-fixed-transaction" className="text-sm">
@@ -111,6 +125,7 @@ export function HouseholdTransactionForm({
       <Select
         value={category}
         onValueChange={setCategory}
+        disabled={isFixed}
       >
         <SelectTrigger className="h-10 rounded-xl bg-surface">
           <SelectValue placeholder="Categoria" />
