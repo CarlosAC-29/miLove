@@ -14,6 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
+import { DataLoadingIndicator } from "@/app/providers/DataLoadingIndicator";
 import { SlowRequestDialog } from "@/app/providers/SlowRequestDialog";
 import { BottomNavigation } from "@/widgets/BottomNavigation/BottomNavigation";
 import { useAuthStore } from "@/stores/auth.store";
@@ -184,6 +185,7 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           {showBottomNavigation ? <BottomNavigation /> : null}
+          <DataLoadingIndicator />
           <SlowRequestDialog />
         </div>
       </ThemeProvider>

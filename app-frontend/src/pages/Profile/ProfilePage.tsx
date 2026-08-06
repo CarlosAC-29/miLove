@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Heart, LogOut, PencilLine, UserRound } from "lucide-react";
+import { Heart, LoaderCircle, LogOut, PencilLine, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -45,6 +45,7 @@ export function ProfilePage() {
   const [avatar, setAvatar] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [partnerName, setPartnerName] = useState<string | null>(null);
+  const [isPartnerLoading, setIsPartnerLoading] = useState(Boolean(user));
 
   useEffect(() => {
     setName(user?.name ?? "");
@@ -54,16 +55,20 @@ export function ProfilePage() {
   useEffect(() => {
     if (!user) {
       setPartnerName(null);
+      setIsPartnerLoading(false);
       return;
     }
 
     let isCurrent = true;
     const loadPartner = async () => {
+      setIsPartnerLoading(true);
       try {
         const partner = await usersService.getMyPartner();
         if (isCurrent) setPartnerName(partner?.name ?? null);
       } catch {
         if (isCurrent) setPartnerName(null);
+      } finally {
+        if (isCurrent) setIsPartnerLoading(false);
       }
     };
 
@@ -146,7 +151,14 @@ export function ProfilePage() {
           <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             Mi pareja
           </p>
-          <p className="text-sm font-semibold">{partnerName ?? "Sin pareja configurada"}</p>
+          {isPartnerLoading ? (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <LoaderCircle className="size-4 animate-spin" />
+              Cargando pareja...
+            </p>
+          ) : (
+            <p className="text-sm font-semibold">{partnerName ?? "Sin pareja configurada"}</p>
+          )}
         </div>
       </SurfaceCard>
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
