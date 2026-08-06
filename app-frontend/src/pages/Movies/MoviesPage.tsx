@@ -351,10 +351,6 @@ export function MoviesPage() {
           >
             {generateMutation.isPending ? "Generando..." : "Generar opciones"}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Pendientes: {contextQuery.data?.suggestions.pending ?? 0} · Aceptadas:{" "}
-            {contextQuery.data?.suggestions.accepted ?? 0}
-          </p>
         </div>
         {actionError ? <p className="mt-3 text-xs text-destructive">{actionError}</p> : null}
       </SurfaceCard>
