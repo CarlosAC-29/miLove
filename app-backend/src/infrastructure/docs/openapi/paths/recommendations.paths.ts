@@ -4,6 +4,14 @@ export const recommendationsPaths = {
       tags: ["Recommendations"],
       summary: "Obtener contexto actual y estado de sugerencias",
       security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "module",
+          in: "query",
+          required: true,
+          schema: { type: "string", enum: ["dates", "gifts", "movies", "restaurants"] },
+        },
+      ],
       responses: {
         "200": {
           description: "Estado de recomendaciones",
@@ -45,7 +53,7 @@ export const recommendationsPaths = {
       summary: "Generar sugerencias desde contexto",
       security: [{ bearerAuth: [] }],
       requestBody: {
-        required: false,
+        required: true,
         content: {
           "application/json": {
             schema: { $ref: "#/components/schemas/GenerateRecommendationsRequest" },
@@ -78,6 +86,12 @@ export const recommendationsPaths = {
       summary: "Listar sugerencias",
       security: [{ bearerAuth: [] }],
       parameters: [
+        {
+          name: "module",
+          in: "query",
+          required: true,
+          schema: { type: "string", enum: ["dates", "gifts", "movies", "restaurants"] },
+        },
         {
           name: "status",
           in: "query",

@@ -4,19 +4,25 @@ import {
   deleteSuggestionsSchema,
   generateSuggestionsSchema,
   listSuggestionsQuerySchema,
+  recommendationModuleSchema,
   upsertContextSchema,
 } from "./recommendations.schemas.js";
 import { recommendationsService } from "./recommendations.service.js";
 
 export const recommendationsController = {
   async getContext(request: Request, response: Response) {
-    const data = await recommendationsService.getContext(request.auth!.sub);
+    const module = recommendationModuleSchema.parse(request.query.module);
+    const data = await recommendationsService.getContext(request.auth!.sub, module);
     return response.json(data);
   },
 
   async upsertContext(request: Request, response: Response) {
     const body = upsertContextSchema.parse(request.body);
-    const data = await recommendationsService.upsertContext(request.auth!.sub, body.context.trim());
+    const data = await recommendationsService.upsertContext(
+      request.auth!.sub,
+      body.module,
+      body.context.trim(),
+    );
     return response.json(data);
   },
 
@@ -25,13 +31,14 @@ export const recommendationsController = {
     const data = await recommendationsService.generateSuggestions(request.auth!.sub, {
       context: body.context?.trim(),
       category: body.category,
+      module: body.module,
     });
     return response.status(201).json(data);
   },
 
   async listSuggestions(request: Request, response: Response) {
-    const status = listSuggestionsQuerySchema.parse(request.query.status ?? "all");
-    const data = await recommendationsService.listSuggestions(request.auth!.sub, status);
+    const query = listSuggestionsQuerySchema.parse(request.query);
+    const data = await recommendationsService.listSuggestions(request.auth!.sub, query.status, query.module);
     return response.json(data);
   },
 

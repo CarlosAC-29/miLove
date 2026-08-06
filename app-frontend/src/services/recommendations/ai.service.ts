@@ -10,6 +10,7 @@ import {
   type GenerateSuggestionsInput,
   type RecommendationContextDto,
   type RecommendationContextStateDto,
+  type RecommendationModule,
   type RecommendationSuggestionDto,
   type SuggestionStatus,
   type UpsertRecommendationContextInput
@@ -30,7 +31,7 @@ export const aiService = {
     return dtos.map(mapAiRecommendation);
   },
 
-  async getContextState(): Promise<RecommendationContextStateDto> {
+  async getContextState(module: RecommendationModule): Promise<RecommendationContextStateDto> {
     if (env.useMocks) {
       await delay(200);
       return {
@@ -38,14 +39,17 @@ export const aiService = {
         suggestions: { total: 0, accepted: 0, pending: 0 }
       };
     }
-    return apiClient.get<RecommendationContextStateDto>(API_ROUTES.recommendations.context);
+    return apiClient.get<RecommendationContextStateDto>(API_ROUTES.recommendations.context, {
+      query: { module }
+    });
   },
 
   async upsertContext(input: UpsertRecommendationContextInput): Promise<RecommendationContextDto> {
     if (env.useMocks) {
       await delay(300);
       return {
-        id: "ctx-mock",
+        id: `ctx-mock-${input.module}`,
+        module: input.module,
         context: input.context,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -54,7 +58,7 @@ export const aiService = {
     return apiClient.put<RecommendationContextDto>(API_ROUTES.recommendations.context, input);
   },
 
-  async generateSuggestions(input: GenerateSuggestionsInput = {}): Promise<{
+  async generateSuggestions(input: GenerateSuggestionsInput): Promise<{
     context: RecommendationContextDto;
     suggestions: RecommendationSuggestionDto[];
   }> {
@@ -62,7 +66,8 @@ export const aiService = {
       await delay(400);
       return {
         context: {
-          id: "ctx-mock",
+          id: `ctx-mock-${input.module}`,
+          module: input.module,
           context: input.context ?? "Contexto de ejemplo para citas",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -76,13 +81,16 @@ export const aiService = {
     }>(API_ROUTES.recommendations.generate, input);
   },
 
-  async listSuggestions(status: SuggestionStatus = "all"): Promise<RecommendationSuggestionDto[]> {
+  async listSuggestions(
+    status: SuggestionStatus = "all",
+    module: RecommendationModule
+  ): Promise<RecommendationSuggestionDto[]> {
     if (env.useMocks) {
       await delay(200);
       return [];
     }
     return apiClient.get<RecommendationSuggestionDto[]>(API_ROUTES.recommendations.suggestions, {
-      query: { status }
+      query: { status, module }
     });
   },
 

@@ -6,11 +6,13 @@ import {
   recommendationsRepository,
   type DbRecommendationContext,
   type DbRecommendationSuggestion,
+  type RecommendationModule,
   type SuggestionCategory,
 } from "./recommendations.repository.js";
 
 interface RecommendationContextDto {
   id: string;
+  module: RecommendationModule;
   context: string;
   createdAt: string;
   updatedAt: string;
@@ -27,9 +29,12 @@ interface RecommendationSuggestionDto {
   createdAt: string;
 }
 
+const recommendationModules: RecommendationModule[] = ["dates", "gifts", "movies", "restaurants"];
+
 function mapContext(context: DbRecommendationContext): RecommendationContextDto {
   return {
     id: context.id,
+    module: context.module,
     context: context.context,
     createdAt: context.createdAt.toISOString(),
     updatedAt: context.updatedAt.toISOString(),
@@ -50,31 +55,34 @@ function mapSuggestion(suggestion: DbRecommendationSuggestion): RecommendationSu
 }
 
 export const recommendationsService = {
-  async getContext(userId: string) {
-    const context = await recommendationsRepository.getContextByUser(userId);
-    const stats = await recommendationsRepository.getSuggestionStats(userId);
+  async getContext(userId: string, module: RecommendationModule) {
+    const context = await recommendationsRepository.getContextByUser(userId, module);
+    const stats = await recommendationsRepository.getSuggestionStats(userId, module);
     return {
       context: context ? mapContext(context) : null,
       suggestions: stats,
     };
   },
 
-  async upsertContext(userId: string, context: string) {
-    const saved = await recommendationsRepository.upsertContext(userId, context);
+  async upsertContext(userId: string, module: RecommendationModule, context: string) {
+    const saved = await recommendationsRepository.upsertContext(userId, module, context);
     return mapContext(saved);
   },
 
-  async generateSuggestions(userId: string, input: { context?: string; category?: SuggestionCategory }) {
+  async generateSuggestions(
+    userId: string,
+    input: { context?: string; category?: SuggestionCategory; module: RecommendationModule },
+  ) {
     let userContext = input.context;
     if (userContext) {
       userContext = userContext.trim();
       if (userContext.length === 0) {
         throw new HttpError(400, "Context is required.");
       }
-      await recommendationsRepository.upsertContext(userId, userContext);
+      await recommendationsRepository.upsertContext(userId, input.module, userContext);
     }
 
-    const context = await recommendationsRepository.getContextByUser(userId);
+    const context = await recommendationsRepository.getContextByUser(userId, input.module);
     if (!context) {
       throw new HttpError(400, "Context is required before generating suggestions.");
     }
@@ -96,8 +104,12 @@ export const recommendationsService = {
     };
   },
 
-  async listSuggestions(userId: string, status: "all" | "accepted" | "pending") {
-    const suggestions = await recommendationsRepository.listSuggestions(userId, status);
+  async listSuggestions(
+    userId: string,
+    status: "all" | "accepted" | "pending",
+    module: RecommendationModule,
+  ) {
+    const suggestions = await recommendationsRepository.listSuggestions(userId, status, module);
     return suggestions.map(mapSuggestion);
   },
 
@@ -118,7 +130,13 @@ export const recommendationsService = {
   },
 
   async listAiRecommendations(userId: string) {
-    const suggestions = await recommendationsRepository.listSuggestions(userId, "all");
+    const suggestions = (
+      await Promise.all(
+        recommendationModules.map((module) =>
+          recommendationsRepository.listSuggestions(userId, "all", module),
+        ),
+      )
+    ).flat();
     return suggestions.map((suggestion) => ({
       id: suggestion.id,
       title: suggestion.title,

@@ -79,14 +79,14 @@ export function PlansPage() {
 
   return (
     <Screen title="Planes" subtitle="Calendario compartido con sugerencias aceptadas">
-      <div className="mb-3 flex items-center gap-2">
-        <Button type="button" size="sm" variant={ownerFilter === "all" ? "default" : "outline"} onClick={() => setOwnerFilter("all")}>
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+        <Button className="w-full sm:w-auto" type="button" size="sm" variant={ownerFilter === "all" ? "default" : "outline"} onClick={() => setOwnerFilter("all")}>
           Todas
         </Button>
-        <Button type="button" size="sm" variant={ownerFilter === "mine" ? "default" : "outline"} onClick={() => setOwnerFilter("mine")}>
+        <Button className="w-full sm:w-auto" type="button" size="sm" variant={ownerFilter === "mine" ? "default" : "outline"} onClick={() => setOwnerFilter("mine")}>
           Subidas por mí
         </Button>
-        <Button type="button" size="sm" variant={ownerFilter === "partner" ? "default" : "outline"} onClick={() => setOwnerFilter("partner")}>
+        <Button className="w-full sm:w-auto" type="button" size="sm" variant={ownerFilter === "partner" ? "default" : "outline"} onClick={() => setOwnerFilter("partner")}>
           Subidas por mi pareja
         </Button>
       </div>
@@ -100,9 +100,10 @@ export function PlansPage() {
           }}
           modifiers={{ hasPlans: daysWithPlans }}
           modifiersClassNames={{
-            hasPlans: "bg-primary/10 rounded-md font-semibold text-primary"
+            hasPlans:
+              "rounded-md bg-success/15 font-semibold text-success hover:bg-success/25 data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground"
           }}
-          className="w-full"
+          className="mx-auto max-w-sm [--cell-size:2.25rem] sm:[--cell-size:2.5rem]"
         />
       </SurfaceCard>
 

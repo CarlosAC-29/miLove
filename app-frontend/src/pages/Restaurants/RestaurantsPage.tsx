@@ -47,8 +47,9 @@ function getErrorMessage(error: unknown) {
   return "No se pudo completar la operación.";
 }
 
-const CONTEXT_KEY = ["recommendations", "context"] as const;
-const SUGGESTIONS_KEY = ["recommendations", "suggestions"] as const;
+const RECOMMENDATION_MODULE = "restaurants" as const;
+const CONTEXT_KEY = ["recommendations", "context", RECOMMENDATION_MODULE] as const;
+const SUGGESTIONS_KEY = ["recommendations", "suggestions", RECOMMENDATION_MODULE] as const;
 const RESTAURANTS_KEY = ["restaurants", "items"] as const;
 
 function toLocalDateTimeInputValue(isoDate: string): string {
@@ -89,12 +90,12 @@ export function RestaurantsPage() {
 
   const contextQuery = useQuery({
     queryKey: CONTEXT_KEY,
-    queryFn: () => aiService.getContextState()
+    queryFn: () => aiService.getContextState(RECOMMENDATION_MODULE)
   });
 
   const suggestionsQuery = useQuery({
     queryKey: SUGGESTIONS_KEY,
-    queryFn: () => aiService.listSuggestions("all")
+    queryFn: () => aiService.listSuggestions("all", RECOMMENDATION_MODULE)
   });
 
   const restaurantsQuery = useQuery({
@@ -104,7 +105,7 @@ export function RestaurantsPage() {
   });
 
   const saveContextMutation = useMutation({
-    mutationFn: (context: string) => aiService.upsertContext({ context }),
+    mutationFn: (context: string) => aiService.upsertContext({ context, module: RECOMMENDATION_MODULE }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: CONTEXT_KEY });
       setIsContextModalOpen(false);
@@ -114,7 +115,7 @@ export function RestaurantsPage() {
   });
 
   const generateMutation = useMutation({
-    mutationFn: () => aiService.generateSuggestions({ category: "restaurant" }),
+    mutationFn: () => aiService.generateSuggestions({ category: "restaurant", module: RECOMMENDATION_MODULE }),
     onSuccess: async (result) => {
       setDraftSuggestions(result.suggestions);
       setSelectedSuggestionIds([]);
@@ -209,13 +210,6 @@ export function RestaurantsPage() {
     const existingContext = contextQuery.data?.context?.context ?? "";
     setContextDraft(existingContext);
   }, [contextQuery.data?.context?.context]);
-
-  useEffect(() => {
-    if (contextQuery.isPending) return;
-    if (!contextQuery.data?.context) {
-      setIsContextModalOpen(true);
-    }
-  }, [contextQuery.data?.context, contextQuery.isPending]);
 
   const upcomingRestaurants = useMemo(() => {
     const list: RestaurantDto[] = restaurantsQuery.data ?? [];
@@ -502,10 +496,7 @@ export function RestaurantsPage() {
 
       <Dialog
         open={isContextModalOpen}
-        onOpenChange={(open) => {
-          if (!open && !contextQuery.data?.context) return;
-          setIsContextModalOpen(open);
-        }}
+        onOpenChange={setIsContextModalOpen}
       >
         <DialogContent>
           <DialogHeader>

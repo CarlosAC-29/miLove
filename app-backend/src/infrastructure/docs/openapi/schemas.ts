@@ -307,11 +307,12 @@ export const openApiSchemas = {
     type: "object",
     properties: {
       id: { type: "string", format: "uuid" },
+      module: { type: "string", enum: ["dates", "gifts", "movies", "restaurants"] },
       context: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
       updatedAt: { type: "string", format: "date-time" },
     },
-    required: ["id", "context", "createdAt", "updatedAt"],
+    required: ["id", "module", "context", "createdAt", "updatedAt"],
   },
   RecommendationSuggestion: {
     type: "object",
@@ -349,14 +350,18 @@ export const openApiSchemas = {
     type: "object",
     properties: {
       context: { type: "string", minLength: 10, maxLength: 2000 },
+      module: { type: "string", enum: ["dates", "gifts", "movies", "restaurants"] },
     },
-    required: ["context"],
+    required: ["context", "module"],
   },
   GenerateRecommendationsRequest: {
     type: "object",
     properties: {
       context: { type: "string", minLength: 10, maxLength: 2000 },
+      category: { type: "string", enum: ["date", "restaurant", "activity", "gift", "trip"] },
+      module: { type: "string", enum: ["dates", "gifts", "movies", "restaurants"] },
     },
+    required: ["module"],
   },
   AcceptSuggestionsRequest: {
     type: "object",

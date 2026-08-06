@@ -22,9 +22,11 @@ export function mapAiRecommendation(dto: AiRecommendationDto): AiRecommendation 
 
 export type SuggestionCategory = "date" | "restaurant" | "activity" | "gift" | "trip";
 export type SuggestionStatus = "all" | "accepted" | "pending";
+export type RecommendationModule = "dates" | "gifts" | "movies" | "restaurants";
 
 export interface RecommendationContextDto {
   id: string;
+  module: RecommendationModule;
   context: string;
   createdAt: string;
   updatedAt: string;
@@ -51,10 +53,12 @@ export interface RecommendationContextStateDto {
 }
 
 export interface UpsertRecommendationContextInput {
+  module: RecommendationModule;
   context: string;
 }
 
 export interface GenerateSuggestionsInput {
+  module: RecommendationModule;
   context?: string;
   category?: SuggestionCategory;
 }

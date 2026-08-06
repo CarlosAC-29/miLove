@@ -1,10 +1,12 @@
 import { db } from "../../database/client.js";
 
 export type SuggestionCategory = "date" | "restaurant" | "activity" | "gift" | "trip";
+export type RecommendationModule = "dates" | "gifts" | "movies" | "restaurants";
 
 export interface DbRecommendationContext {
   id: string;
   userId: string;
+  module: RecommendationModule;
   context: string;
   createdAt: Date;
   updatedAt: Date;
@@ -24,49 +26,58 @@ export interface DbRecommendationSuggestion {
 
 const baseSuggestionSelect = `
   select
-    id,
-    context_id as "contextId",
-    user_id as "userId",
-    category,
-    title,
-    message,
-    accepted,
-    accepted_at as "acceptedAt",
-    created_at as "createdAt"
-  from recommendation_suggestions
+    rs.id,
+    rs.context_id as "contextId",
+    rs.user_id as "userId",
+    rs.category,
+    rs.title,
+    rs.message,
+    rs.accepted,
+    rs.accepted_at as "acceptedAt",
+    rs.created_at as "createdAt"
+  from recommendation_suggestions rs
 `;
 
 export const recommendationsRepository = {
-  async getContextByUser(userId: string): Promise<DbRecommendationContext | null> {
+  async getContextByUser(
+    userId: string,
+    module: RecommendationModule,
+  ): Promise<DbRecommendationContext | null> {
     const result = await db.query<DbRecommendationContext>(
       `select
         id,
         user_id as "userId",
+        module,
         context,
         created_at as "createdAt",
         updated_at as "updatedAt"
       from recommendation_contexts
-      where user_id = $1
+      where user_id = $1 and module = $2
       limit 1`,
-      [userId],
+      [userId, module],
     );
     return result.rows[0] ?? null;
   },
 
-  async upsertContext(userId: string, context: string): Promise<DbRecommendationContext> {
+  async upsertContext(
+    userId: string,
+    module: RecommendationModule,
+    context: string,
+  ): Promise<DbRecommendationContext> {
     const result = await db.query<DbRecommendationContext>(
-      `insert into recommendation_contexts (user_id, context)
-       values ($1, $2)
-       on conflict (user_id) do update set
+      `insert into recommendation_contexts (user_id, module, context)
+       values ($1, $2, $3)
+       on conflict (user_id, module) do update set
          context = excluded.context,
          updated_at = now()
        returning
          id,
          user_id as "userId",
+         module,
          context,
          created_at as "createdAt",
          updated_at as "updatedAt"`,
-      [userId, context],
+      [userId, module, context],
     );
     return result.rows[0]!;
   },
@@ -113,13 +124,15 @@ export const recommendationsRepository = {
   async listSuggestions(
     userId: string,
     status: "all" | "accepted" | "pending",
+    module: RecommendationModule,
   ): Promise<DbRecommendationSuggestion[]> {
     if (status === "all") {
       const result = await db.query<DbRecommendationSuggestion>(
         `${baseSuggestionSelect}
-         where user_id = $1
-         order by created_at desc`,
-        [userId],
+         join recommendation_contexts rc on rc.id = rs.context_id
+         where rs.user_id = $1 and rc.module = $2
+         order by rs.created_at desc`,
+        [userId, module],
       );
       return result.rows;
     }
@@ -127,9 +140,10 @@ export const recommendationsRepository = {
     const accepted = status === "accepted";
     const result = await db.query<DbRecommendationSuggestion>(
       `${baseSuggestionSelect}
-       where user_id = $1 and accepted = $2
-       order by created_at desc`,
-      [userId, accepted],
+       join recommendation_contexts rc on rc.id = rs.context_id
+       where rs.user_id = $1 and rs.accepted = $2 and rc.module = $3
+       order by rs.created_at desc`,
+      [userId, accepted, module],
     );
     return result.rows;
   },
@@ -164,15 +178,19 @@ export const recommendationsRepository = {
     return result.rowCount ?? result.rows.length;
   },
 
-  async getSuggestionStats(userId: string): Promise<{ total: number; accepted: number; pending: number }> {
+  async getSuggestionStats(
+    userId: string,
+    module: RecommendationModule,
+  ): Promise<{ total: number; accepted: number; pending: number }> {
     const result = await db.query<{ total: string; accepted: string; pending: string }>(
       `select
          count(*)::text as total,
          count(*) filter (where accepted = true)::text as accepted,
          count(*) filter (where accepted = false)::text as pending
-       from recommendation_suggestions
-       where user_id = $1`,
-      [userId],
+       from recommendation_suggestions rs
+       join recommendation_contexts rc on rc.id = rs.context_id
+       where rs.user_id = $1 and rc.module = $2`,
+      [userId, module],
     );
     const row = result.rows[0]!;
     return {
