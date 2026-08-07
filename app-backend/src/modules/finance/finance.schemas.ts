@@ -41,6 +41,20 @@ export const createGoalSchema = z.object({
   deadline: z.string().optional(),
 });
 
+export const updateGoalSchema = z.object({
+  name: z.string().min(1).optional(),
+  targetAmount: z.number().positive().optional(),
+  deadline: z.string().nullable().optional(),
+});
+
+export const createGoalContributionSchema = z.object({
+  amount: z.number().positive(),
+  month: financeMonthSchema,
+  isShared: z.boolean().optional(),
+});
+
+export const updateGoalContributionSchema = createGoalContributionSchema;
+
 export const updateContributionSchema = z.object({
   amount: z.number().nonnegative(),
 });

@@ -46,9 +46,7 @@ export const authRepository = {
       `insert into profiles (id, name, email, avatar, provider, provider_external_id)
        values ($1, $2, $3, $4, $5, $6)
        on conflict (id) do update set
-         name = excluded.name,
          email = excluded.email,
-         avatar = excluded.avatar,
          provider = excluded.provider,
          provider_external_id = excluded.provider_external_id
        returning *`,

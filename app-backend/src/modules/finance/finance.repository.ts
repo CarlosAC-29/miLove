@@ -314,17 +314,70 @@ export const financeRepository = {
 
   async listGoals(userId: string, context: FinanceContext) {
     const result = await db.query(
-      `select id, name, target_amount as "targetAmount", current_amount as "currentAmount", context, deadline
-       from goals
-       where user_id = $1 and context = $2
-       order by name asc`,
+      `select g.id, g.name, g.target_amount as "targetAmount",
+              (case when g.user_id = $1 then g.current_amount else 0 end)
+                + coalesce(sum(gc.amount) filter (where g.user_id = $1 or gc.is_shared), 0) as "currentAmount",
+              g.context, g.deadline, g.user_id = $1 as "isOwner"
+       from goals g
+       left join goal_contributions gc on gc.goal_id = g.id
+       where g.context = $2
+         and (
+           g.user_id = $1
+           or exists (
+             select 1
+             from goal_contributions shared_contribution
+             join couple_members owner_member on owner_member.user_id = g.user_id
+             join couple_members viewer_member on viewer_member.couple_id = owner_member.couple_id
+             where shared_contribution.goal_id = g.id
+               and shared_contribution.is_shared
+               and viewer_member.user_id = $1
+           )
+         )
+       group by g.id
+       order by g.name asc`,
       [userId, context],
     );
+    const contributionResult = await db.query(
+      `select gc.id, gc.goal_id as "goalId", gc.amount, to_char(gc.month, 'YYYY-MM') as month,
+              gc.is_shared as "isShared"
+       from goal_contributions gc
+       join goals g on g.id = gc.goal_id
+       where g.context = $2
+         and (
+           g.user_id = $1
+           or (
+             gc.is_shared
+             and exists (
+               select 1
+               from couple_members owner_member
+               join couple_members viewer_member on viewer_member.couple_id = owner_member.couple_id
+               where owner_member.user_id = g.user_id and viewer_member.user_id = $1
+             )
+           )
+         )
+       order by gc.month desc, gc.created_at desc`,
+      [userId, context],
+    );
+    const contributionsByGoal = new Map<
+      string,
+      Array<{ id: string; amount: number; month: string; isShared: boolean }>
+    >();
+    for (const contribution of contributionResult.rows) {
+      const contributions = contributionsByGoal.get(contribution.goalId) ?? [];
+      contributions.push({
+        id: contribution.id,
+        amount: Number(contribution.amount),
+        month: contribution.month,
+        isShared: contribution.isShared,
+      });
+      contributionsByGoal.set(contribution.goalId, contributions);
+    }
     return result.rows.map((row) => ({
       ...row,
       targetAmount: Number(row.targetAmount),
       currentAmount: Number(row.currentAmount),
       deadline: row.deadline ? new Date(row.deadline).toISOString().slice(0, 10) : undefined,
+      contributions: contributionsByGoal.get(row.id) ?? [],
     }));
   },
 
@@ -349,6 +402,94 @@ export const financeRepository = {
       currentAmount: Number(row.currentAmount),
       deadline: row.deadline ? new Date(row.deadline).toISOString().slice(0, 10) : undefined,
     };
+  },
+
+  async createGoalContribution(
+    userId: string,
+    goalId: string,
+    input: { amount: number; month: string; isShared?: boolean },
+  ) {
+    const result = await db.query(
+      `insert into goal_contributions (goal_id, amount, month, is_shared)
+       select id, $3, $4::date, $5
+       from goals
+       where id = $1 and user_id = $2
+       returning id`,
+      [goalId, userId, input.amount, `${input.month}-01`, input.isShared ?? false],
+    );
+    return result.rows.length > 0;
+  },
+
+  async updateGoal(
+    userId: string,
+    goalId: string,
+    patch: { name?: string; targetAmount?: number; deadline?: string | null },
+  ) {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    if (patch.name !== undefined) {
+      values.push(patch.name);
+      fields.push(`name = $${values.length}`);
+    }
+    if (patch.targetAmount !== undefined) {
+      values.push(patch.targetAmount);
+      fields.push(`target_amount = $${values.length}`);
+    }
+    if (patch.deadline !== undefined) {
+      values.push(patch.deadline);
+      fields.push(`deadline = $${values.length}::date`);
+    }
+    if (fields.length === 0) return null;
+
+    values.push(goalId, userId);
+    const result = await db.query(
+      `update goals
+       set ${fields.join(", ")}
+       where id = $${values.length - 1} and user_id = $${values.length}
+       returning id, name, target_amount as "targetAmount", current_amount as "currentAmount", context, deadline`,
+      values,
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    return {
+      ...row,
+      targetAmount: Number(row.targetAmount),
+      currentAmount: Number(row.currentAmount),
+      deadline: row.deadline ? new Date(row.deadline).toISOString().slice(0, 10) : undefined,
+    };
+  },
+
+  async deleteGoal(userId: string, goalId: string) {
+    const result = await db.query("delete from goals where id = $1 and user_id = $2", [goalId, userId]);
+    return (result.rowCount ?? 0) > 0;
+  },
+
+  async updateGoalContribution(
+    userId: string,
+    goalId: string,
+    contributionId: string,
+    input: { amount: number; month: string; isShared?: boolean },
+  ) {
+    const result = await db.query(
+      `update goal_contributions gc
+       set amount = $4, month = $5::date, is_shared = $6
+       from goals g
+       where gc.id = $1 and gc.goal_id = g.id and g.id = $2 and g.user_id = $3
+       returning gc.id`,
+      [contributionId, goalId, userId, input.amount, `${input.month}-01`, input.isShared ?? false],
+    );
+    return result.rows.length > 0;
+  },
+
+  async deleteGoalContribution(userId: string, goalId: string, contributionId: string) {
+    const result = await db.query(
+      `delete from goal_contributions gc
+       using goals g
+       where gc.id = $1 and gc.goal_id = g.id and g.id = $2 and g.user_id = $3
+       returning gc.id`,
+      [contributionId, goalId, userId],
+    );
+    return result.rows.length > 0;
   },
 
   async listHouseholdMembers(userId: string) {

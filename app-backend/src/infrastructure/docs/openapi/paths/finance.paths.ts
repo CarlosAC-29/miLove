@@ -342,6 +342,143 @@ export const financePaths = {
       },
     },
   },
+  "/finance/goals/{id}/contributions": {
+    post: {
+      tags: ["Finance"],
+      summary: "Registrar aporte a una meta",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/CreateGoalContributionRequest" },
+          },
+        },
+      },
+      responses: {
+        "204": { description: "Aporte registrado" },
+        "404": {
+          description: "Meta no encontrada",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/finance/goals/{id}": {
+    put: {
+      tags: ["Finance"],
+      summary: "Editar meta",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/UpdateGoalRequest" },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "Meta actualizada",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/Goal" },
+            },
+          },
+        },
+      },
+    },
+    delete: {
+      tags: ["Finance"],
+      summary: "Eliminar meta",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        "204": { description: "Meta eliminada" },
+      },
+    },
+  },
+  "/finance/goals/{id}/contributions/{contributionId}": {
+    put: {
+      tags: ["Finance"],
+      summary: "Editar aporte de una meta",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "contributionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/CreateGoalContributionRequest" },
+          },
+        },
+      },
+      responses: {
+        "204": { description: "Aporte actualizado" },
+      },
+    },
+    delete: {
+      tags: ["Finance"],
+      summary: "Eliminar aporte de una meta",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "contributionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        "204": { description: "Aporte eliminado" },
+      },
+    },
+  },
   "/finance/household": {
     get: {
       tags: ["Finance"],

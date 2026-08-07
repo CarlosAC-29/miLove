@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, CalendarPlus, Wallet } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, CalendarPlus, Target, Wallet } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -25,6 +25,7 @@ import { HouseholdBudgetForm } from "@/features/finance/household/createHousehol
 import { useEditSharedExpense } from "@/features/finance/household/editSharedExpense/useEditSharedExpense";
 import { PersonalTransactionForm } from "@/features/finance/personal/addTransaction/PersonalTransactionForm";
 import { PersonalBudgetForm } from "@/features/finance/personal/createBudget/PersonalBudgetForm";
+import { PersonalGoalForm } from "@/features/finance/personal/createGoal/PersonalGoalForm";
 import { useDeletePersonalTransaction } from "@/features/finance/personal/deleteTransaction/useDeletePersonalTransaction";
 import { useEditPersonalTransaction } from "@/features/finance/personal/editTransaction/useEditPersonalTransaction";
 import { useFinanceDashboard } from "@/features/finance/model/useFinanceDashboard";
@@ -33,11 +34,13 @@ import { SurfaceCard } from "@/shared/ui/SurfaceCard";
 import { BalanceCard } from "@/widgets/BalanceCard/BalanceCard";
 import { BudgetCard } from "@/widgets/BudgetCard/BudgetCard";
 import { ExpenseChart } from "@/widgets/ExpenseChart/ExpenseChart";
+import { GoalProgress } from "@/widgets/GoalProgress/GoalProgress";
 import { TransactionList } from "@/widgets/TransactionList/TransactionList";
+import { SharedGoalForm } from "@/features/finance/household/createSharedGoal/SharedGoalForm";
 import { FinancialAIAssistant } from "./FinancialAIAssistant";
 
 export function FinanceDashboard({ context, month }: { context: FinanceContext; month: string }) {
-  const { transactions, budgets, householdProfile, summary, isLoading, error, reload } =
+  const { transactions, budgets, goals, householdProfile, summary, isLoading, error, reload } =
     useFinanceDashboard(context, month);
   const { deletePersonalTransaction } = useDeletePersonalTransaction(reload);
   const { editPersonalTransaction } = useEditPersonalTransaction(reload);
@@ -45,6 +48,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [transactionModalType, setTransactionModalType] = useState<TransactionType>("expense");
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isExtendingFixedTransactions, setIsExtendingFixedTransactions] = useState(false);
   const [isExtendConfirmationOpen, setIsExtendConfirmationOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -274,6 +278,41 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
             </DialogContent>
           </Dialog>
 
+          <Dialog open={isGoalModalOpen} onOpenChange={setIsGoalModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-20 flex-col gap-1 rounded-xl whitespace-normal"
+              >
+                <Target className="size-5" />
+                <span className="text-center text-xs leading-tight">Crear meta</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {context === "personal" ? "Crear meta personal" : "Crear meta del hogar"}
+                </DialogTitle>
+              </DialogHeader>
+              {context === "personal" ? (
+                <PersonalGoalForm
+                  onSaved={async () => {
+                    await reload();
+                    setIsGoalModalOpen(false);
+                  }}
+                />
+              ) : (
+                <SharedGoalForm
+                  onSaved={async () => {
+                    await reload();
+                    setIsGoalModalOpen(false);
+                  }}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
           <Button
             type="button"
             variant="outline"
@@ -317,6 +356,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
       </AlertDialog>
 
       <BalanceCard summary={summary} />
+      <GoalProgress goals={goals} month={month} onContributionSaved={reload} />
       <FinancialAIAssistant
         summary={summary}
         transactions={transactions}

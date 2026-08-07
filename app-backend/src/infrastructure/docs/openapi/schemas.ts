@@ -239,8 +239,23 @@ export const openApiSchemas = {
       currentAmount: { type: "number" },
       context: { type: "string", enum: ["personal", "household"] },
       deadline: { type: "string", format: "date", nullable: true },
+      isOwner: { type: "boolean" },
+      contributions: {
+        type: "array",
+        items: { $ref: "#/components/schemas/GoalContribution" },
+      },
     },
     required: ["id", "name", "targetAmount", "currentAmount", "context"],
+  },
+  GoalContribution: {
+    type: "object",
+    properties: {
+      id: { type: "string", format: "uuid" },
+      amount: { type: "number" },
+      month: { type: "string", example: "2026-08" },
+      isShared: { type: "boolean" },
+    },
+    required: ["id", "amount", "month", "isShared"],
   },
   CreateGoalRequest: {
     type: "object",
@@ -252,6 +267,23 @@ export const openApiSchemas = {
       deadline: { type: "string", example: "2026-12-31" },
     },
     required: ["name", "targetAmount", "currentAmount", "context"],
+  },
+  CreateGoalContributionRequest: {
+    type: "object",
+    properties: {
+      amount: { type: "number", exclusiveMinimum: 0 },
+      month: { type: "string", example: "2026-08" },
+      isShared: { type: "boolean", default: false },
+    },
+    required: ["amount", "month"],
+  },
+  UpdateGoalRequest: {
+    type: "object",
+    properties: {
+      name: { type: "string", minLength: 1 },
+      targetAmount: { type: "number", exclusiveMinimum: 0 },
+      deadline: { type: "string", format: "date", nullable: true },
+    },
   },
   Summary: {
     type: "object",

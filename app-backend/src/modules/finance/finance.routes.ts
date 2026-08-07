@@ -21,6 +21,17 @@ router.delete("/budgets/:id", asyncHandler(financeController.deleteBudget));
 
 router.get("/goals", asyncHandler(financeController.listGoals));
 router.post("/goals", asyncHandler(financeController.createGoal));
+router.put("/goals/:id", asyncHandler(financeController.updateGoal));
+router.delete("/goals/:id", asyncHandler(financeController.deleteGoal));
+router.post("/goals/:id/contributions", asyncHandler(financeController.createGoalContribution));
+router.put(
+  "/goals/:id/contributions/:contributionId",
+  asyncHandler(financeController.updateGoalContribution),
+);
+router.delete(
+  "/goals/:id/contributions/:contributionId",
+  asyncHandler(financeController.deleteGoalContribution),
+);
 
 router.get("/household", asyncHandler(financeController.household));
 router.put(

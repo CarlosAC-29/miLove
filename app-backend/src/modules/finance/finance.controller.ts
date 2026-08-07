@@ -4,11 +4,14 @@ import { financeService } from "./finance.service.js";
 import {
   createBudgetSchema,
   createGoalSchema,
+  createGoalContributionSchema,
   createTransactionSchema,
   extendFixedTransactionsSchema,
   financeContextSchema,
   financeMonthSchema,
   updateContributionSchema,
+  updateGoalContributionSchema,
+  updateGoalSchema,
   updateBudgetSchema,
   updateTransactionSchema,
 } from "./finance.schemas.js";
@@ -78,6 +81,43 @@ export const financeController = {
     const body = createGoalSchema.parse(request.body);
     const data = await financeService.createGoal(request.auth!.sub, body);
     return response.status(201).json(data);
+  },
+
+  async createGoalContribution(request: Request, response: Response) {
+    const body = createGoalContributionSchema.parse(request.body);
+    await financeService.createGoalContribution(request.auth!.sub, request.params.id, body);
+    return response.status(204).send();
+  },
+
+  async updateGoal(request: Request, response: Response) {
+    const body = updateGoalSchema.parse(request.body);
+    const data = await financeService.updateGoal(request.auth!.sub, request.params.id, body);
+    return response.json(data);
+  },
+
+  async deleteGoal(request: Request, response: Response) {
+    await financeService.deleteGoal(request.auth!.sub, request.params.id);
+    return response.status(204).send();
+  },
+
+  async updateGoalContribution(request: Request, response: Response) {
+    const body = updateGoalContributionSchema.parse(request.body);
+    await financeService.updateGoalContribution(
+      request.auth!.sub,
+      request.params.id,
+      request.params.contributionId,
+      body,
+    );
+    return response.status(204).send();
+  },
+
+  async deleteGoalContribution(request: Request, response: Response) {
+    await financeService.deleteGoalContribution(
+      request.auth!.sub,
+      request.params.id,
+      request.params.contributionId,
+    );
+    return response.status(204).send();
   },
 
   async summary(request: Request, response: Response) {

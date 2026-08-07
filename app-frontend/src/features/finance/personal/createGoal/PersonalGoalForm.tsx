@@ -1,11 +1,29 @@
 import { useState, type FormEvent } from "react";
+import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatMoneyInput, parseMoneyInput } from "@/shared/lib/money-input";
 import { useCreatePersonalGoal } from "./useCreatePersonalGoal";
 
 interface PersonalGoalFormProps {
   onSaved?: () => Promise<void> | void;
+}
+
+function dateToIso(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDeadline(date: string): string {
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(new Date(`${date}T00:00:00`));
 }
 
 export function PersonalGoalForm({ onSaved }: PersonalGoalFormProps) {
@@ -14,6 +32,7 @@ export function PersonalGoalForm({ onSaved }: PersonalGoalFormProps) {
   const [targetAmount, setTargetAmount] = useState("");
   const [currentAmount, setCurrentAmount] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [isDeadlineCalendarOpen, setIsDeadlineCalendarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -65,18 +84,56 @@ export function PersonalGoalForm({ onSaved }: PersonalGoalFormProps) {
         <Input
           value={currentAmount}
           onChange={(event) => setCurrentAmount(formatMoneyInput(event.target.value))}
-          placeholder="Ahorrado"
+          placeholder="Ahorro inicial"
           type="text"
           inputMode="numeric"
           className="h-10 rounded-xl bg-surface"
         />
       </div>
-      <Input
-        value={deadline}
-        onChange={(event) => setDeadline(event.target.value)}
-        type="date"
-        className="h-10 rounded-xl bg-surface"
-      />
+      <Popover open={isDeadlineCalendarOpen} onOpenChange={setIsDeadlineCalendarOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 w-full justify-start rounded-xl bg-surface px-3 text-left font-normal"
+          >
+            <CalendarDays className="mr-2 size-4 text-muted-foreground" />
+            {deadline ? (
+              formatDeadline(deadline)
+            ) : (
+              <span className="text-muted-foreground">Fecha límite (opcional)</span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto rounded-xl border-border bg-surface p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={deadline ? new Date(`${deadline}T00:00:00`) : undefined}
+            onSelect={(date) => {
+              if (!date) return;
+              setDeadline(dateToIso(date));
+              setIsDeadlineCalendarOpen(false);
+            }}
+            className="w-72 [--cell-size:2.25rem]"
+          />
+          {deadline ? (
+            <div className="border-t border-border p-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  setDeadline("");
+                  setIsDeadlineCalendarOpen(false);
+                }}
+              >
+                Quitar fecha
+              </Button>
+            </div>
+          ) : null}
+        </PopoverContent>
+      </Popover>
       <Button
         type="submit"
         variant="outline"

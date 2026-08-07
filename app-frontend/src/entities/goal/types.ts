@@ -7,6 +7,15 @@ export interface GoalDto {
   currentAmount: number;
   context: FinanceContext;
   deadline?: string;
+  contributions?: GoalContributionDto[];
+  isOwner?: boolean;
+}
+
+export interface GoalContributionDto {
+  id: string;
+  amount: number;
+  month: string;
+  isShared: boolean;
 }
 
 export interface Goal {
@@ -16,10 +25,23 @@ export interface Goal {
   readonly currentAmount: number;
   readonly context: FinanceContext;
   readonly deadline?: string;
+  readonly contributions: readonly GoalContribution[];
+  readonly isOwner: boolean;
+}
+
+export interface GoalContribution {
+  readonly id: string;
+  readonly amount: number;
+  readonly month: string;
+  readonly isShared: boolean;
 }
 
 export function mapGoal(dto: GoalDto): Goal {
-  return { ...dto };
+  return {
+    ...dto,
+    contributions: dto.contributions ?? [],
+    isOwner: dto.isOwner ?? true
+  };
 }
 
 export function goalProgress(goal: Goal): number {

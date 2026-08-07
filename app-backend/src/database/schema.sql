@@ -77,3 +77,12 @@ create table if not exists goals (
   user_id uuid not null references users(id) on delete cascade,
   couple_id uuid references couples(id) on delete cascade
 );
+
+create table if not exists goal_contributions (
+  id uuid primary key default gen_random_uuid(),
+  goal_id uuid not null references goals(id) on delete cascade,
+  amount numeric(14, 2) not null check (amount > 0),
+  month date not null,
+  is_shared boolean not null default false,
+  created_at timestamptz not null default now()
+);

@@ -65,7 +65,7 @@ export function SharedGoalForm({ onSaved }: SharedGoalFormProps) {
         <Input
           value={currentAmount}
           onChange={(event) => setCurrentAmount(formatMoneyInput(event.target.value))}
-          placeholder="Ahorrado"
+          placeholder="Ahorro inicial"
           type="text"
           inputMode="numeric"
           className="h-10 rounded-xl bg-surface"

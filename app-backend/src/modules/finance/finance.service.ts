@@ -113,6 +113,50 @@ export const financeService = {
     return financeRepository.createGoal({ userId, ...input });
   },
 
+  async createGoalContribution(
+    userId: string,
+    goalId: string,
+    input: { amount: number; month: string; isShared?: boolean },
+  ) {
+    const created = await financeRepository.createGoalContribution(userId, goalId, input);
+    if (!created) throw new HttpError(404, "Goal not found.");
+  },
+
+  async updateGoal(
+    userId: string,
+    goalId: string,
+    input: { name?: string; targetAmount?: number; deadline?: string | null },
+  ) {
+    const updated = await financeRepository.updateGoal(userId, goalId, input);
+    if (!updated) throw new HttpError(404, "Goal not found.");
+    return updated;
+  },
+
+  async deleteGoal(userId: string, goalId: string) {
+    const deleted = await financeRepository.deleteGoal(userId, goalId);
+    if (!deleted) throw new HttpError(404, "Goal not found.");
+  },
+
+  async updateGoalContribution(
+    userId: string,
+    goalId: string,
+    contributionId: string,
+    input: { amount: number; month: string; isShared?: boolean },
+  ) {
+    const updated = await financeRepository.updateGoalContribution(
+      userId,
+      goalId,
+      contributionId,
+      input,
+    );
+    if (!updated) throw new HttpError(404, "Goal contribution not found.");
+  },
+
+  async deleteGoalContribution(userId: string, goalId: string, contributionId: string) {
+    const deleted = await financeRepository.deleteGoalContribution(userId, goalId, contributionId);
+    if (!deleted) throw new HttpError(404, "Goal contribution not found.");
+  },
+
   async getSummary(userId: string, context: FinanceContext, month?: string) {
     const transactions = await financeRepository.listTransactions(userId, context, month);
     return buildSummary(transactions);

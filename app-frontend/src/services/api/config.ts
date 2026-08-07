@@ -28,6 +28,10 @@ export const API_ROUTES = {
     budgets: "/finance/budgets",
     budgetById: (id: string) => `/finance/budgets/${id}`,
     goals: "/finance/goals",
+    goalById: (id: string) => `/finance/goals/${id}`,
+    goalContributions: (id: string) => `/finance/goals/${id}/contributions`,
+    goalContributionById: (goalId: string, contributionId: string) =>
+      `/finance/goals/${goalId}/contributions/${contributionId}`,
     household: "/finance/household",
     insights: "/finance/insights"
   },

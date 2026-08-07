@@ -14,7 +14,7 @@ import { MOCK_HOUSEHOLD_TRANSACTIONS } from "@/entities/transaction/mock/househo
 import { mapBudget, type Budget, type BudgetDto, type UpdateBudgetInput } from "@/entities/budget/types";
 import { MOCK_PERSONAL_BUDGETS } from "@/entities/budget/mock/personalBudgets";
 import { MOCK_HOUSEHOLD_BUDGETS } from "@/entities/budget/mock/householdBudgets";
-import { mapGoal, type Goal, type GoalDto } from "@/entities/goal/types";
+import { mapGoal, type Goal, type GoalContributionDto, type GoalDto } from "@/entities/goal/types";
 import { MOCK_GOALS } from "@/entities/goal/mock/goals";
 import {
   mapHouseholdProfile,
@@ -31,6 +31,7 @@ const memory = {
   transactions: [...MOCK_PERSONAL_TRANSACTIONS, ...MOCK_HOUSEHOLD_TRANSACTIONS] as TransactionDto[],
   budgets: [...MOCK_PERSONAL_BUDGETS, ...MOCK_HOUSEHOLD_BUDGETS] as BudgetDto[],
   goals: [...MOCK_GOALS] as GoalDto[],
+  goalContributions: [] as Array<GoalContributionDto & { goalId: string }>,
   household: MOCK_HOUSEHOLD_PROFILE as HouseholdProfileDto
 };
 
@@ -234,7 +235,18 @@ export const financeService = {
   async listGoals(context: FinanceContext): Promise<Goal[]> {
     if (env.useMocks) {
       await delay();
-      return memory.goals.filter((g) => g.context === context).map(mapGoal);
+      return memory.goals
+        .filter((goal) => goal.context === context)
+        .map((goal) => {
+          const contributions = memory.goalContributions
+            .filter((contribution) => contribution.goalId === goal.id)
+            .map(({ goalId: _, ...contribution }) => contribution);
+          return mapGoal({
+            ...goal,
+            currentAmount: goal.currentAmount + contributions.reduce((total, item) => total + item.amount, 0),
+            contributions
+          });
+        });
     }
     const dtos = await apiClient.get<GoalDto[]>(API_ROUTES.finance.goals, { query: { context } });
     return dtos.map(mapGoal);
@@ -249,6 +261,94 @@ export const financeService = {
     }
     const dto = await apiClient.post<GoalDto>(API_ROUTES.finance.goals, input);
     return mapGoal(dto);
+  },
+
+  async createGoalContribution(
+    goalId: string,
+    input: { amount: number; month: string; isShared?: boolean }
+  ): Promise<void> {
+    if (env.useMocks) {
+      await delay(300);
+      if (!memory.goals.some((goal) => goal.id === goalId)) throw new Error("No se encontró la meta.");
+      memory.goalContributions = [
+        {
+          id: `goal-contribution-${Date.now()}`,
+          goalId,
+          ...input,
+          isShared: input.isShared ?? false
+        },
+        ...memory.goalContributions
+      ];
+      return;
+    }
+    await apiClient.post<void>(API_ROUTES.finance.goalContributions(goalId), input);
+  },
+
+  async updateGoal(
+    goalId: string,
+    input: { name: string; targetAmount: number; deadline: string | null }
+  ): Promise<void> {
+    if (env.useMocks) {
+      await delay(300);
+      let found = false;
+      memory.goals = memory.goals.map((goal) => {
+        if (goal.id !== goalId) return goal;
+        found = true;
+        return { ...goal, ...input, deadline: input.deadline ?? undefined };
+      });
+      if (!found) throw new Error("No se encontró la meta.");
+      return;
+    }
+    await apiClient.put<void>(API_ROUTES.finance.goalById(goalId), input);
+  },
+
+  async deleteGoal(goalId: string): Promise<void> {
+    if (env.useMocks) {
+      await delay(250);
+      memory.goals = memory.goals.filter((goal) => goal.id !== goalId);
+      memory.goalContributions = memory.goalContributions.filter(
+        (contribution) => contribution.goalId !== goalId
+      );
+      return;
+    }
+    await apiClient.delete<void>(API_ROUTES.finance.goalById(goalId));
+  },
+
+  async updateGoalContribution(
+    goalId: string,
+    contributionId: string,
+    input: { amount: number; month: string; isShared?: boolean }
+  ): Promise<void> {
+    if (env.useMocks) {
+      await delay(300);
+      let found = false;
+      memory.goalContributions = memory.goalContributions.map((contribution) => {
+        if (contribution.goalId !== goalId || contribution.id !== contributionId) return contribution;
+        found = true;
+        return { ...contribution, ...input, isShared: input.isShared ?? false };
+      });
+      if (!found) throw new Error("No se encontró el aporte.");
+      return;
+    }
+    await apiClient.put<void>(
+      API_ROUTES.finance.goalContributionById(goalId, contributionId),
+      input
+    );
+  },
+
+  async deleteGoalContribution(goalId: string, contributionId: string): Promise<void> {
+    if (env.useMocks) {
+      await delay(250);
+      const initialSize = memory.goalContributions.length;
+      memory.goalContributions = memory.goalContributions.filter(
+        (contribution) => contribution.goalId !== goalId || contribution.id !== contributionId
+      );
+      if (memory.goalContributions.length === initialSize) {
+        throw new Error("No se encontró el aporte.");
+      }
+      return;
+    }
+    await apiClient.delete<void>(API_ROUTES.finance.goalContributionById(goalId, contributionId));
   },
 
   async getHouseholdProfile(): Promise<HouseholdProfile> {
