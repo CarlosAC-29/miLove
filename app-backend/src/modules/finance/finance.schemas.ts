@@ -39,12 +39,14 @@ export const createGoalSchema = z.object({
   currentAmount: z.number().nonnegative(),
   context: financeContextSchema,
   deadline: z.string().optional(),
+  isShared: z.boolean().optional(),
 });
 
 export const updateGoalSchema = z.object({
   name: z.string().min(1).optional(),
   targetAmount: z.number().positive().optional(),
   deadline: z.string().nullable().optional(),
+  isShared: z.boolean().optional(),
 });
 
 export const createGoalContributionSchema = z.object({

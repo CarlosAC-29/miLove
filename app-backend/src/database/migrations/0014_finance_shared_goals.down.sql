@@ -1,0 +1,8 @@
+BEGIN;
+
+DROP INDEX IF EXISTS idx_goals_shared;
+
+ALTER TABLE goals
+  DROP COLUMN IF EXISTS is_shared;
+
+COMMIT;

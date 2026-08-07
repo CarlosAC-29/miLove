@@ -74,8 +74,10 @@ create table if not exists goals (
   current_amount numeric(14, 2) not null default 0,
   context text not null check (context in ('personal', 'household')),
   deadline date,
+  is_shared boolean not null default false,
   user_id uuid not null references users(id) on delete cascade,
-  couple_id uuid references couples(id) on delete cascade
+  couple_id uuid references couples(id) on delete cascade,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists goal_contributions (
@@ -84,5 +86,6 @@ create table if not exists goal_contributions (
   amount numeric(14, 2) not null check (amount > 0),
   month date not null,
   is_shared boolean not null default false,
+  contributor_id uuid not null references users(id) on delete cascade,
   created_at timestamptz not null default now()
 );

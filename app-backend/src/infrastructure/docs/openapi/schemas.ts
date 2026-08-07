@@ -240,6 +240,7 @@ export const openApiSchemas = {
       context: { type: "string", enum: ["personal", "household"] },
       deadline: { type: "string", format: "date", nullable: true },
       isOwner: { type: "boolean" },
+      isShared: { type: "boolean" },
       contributions: {
         type: "array",
         items: { $ref: "#/components/schemas/GoalContribution" },
@@ -265,6 +266,7 @@ export const openApiSchemas = {
       currentAmount: { type: "number", minimum: 0 },
       context: { type: "string", enum: ["personal", "household"] },
       deadline: { type: "string", example: "2026-12-31" },
+      isShared: { type: "boolean", default: false },
     },
     required: ["name", "targetAmount", "currentAmount", "context"],
   },
@@ -283,6 +285,7 @@ export const openApiSchemas = {
       name: { type: "string", minLength: 1 },
       targetAmount: { type: "number", exclusiveMinimum: 0 },
       deadline: { type: "string", format: "date", nullable: true },
+      isShared: { type: "boolean" },
     },
   },
   Summary: {

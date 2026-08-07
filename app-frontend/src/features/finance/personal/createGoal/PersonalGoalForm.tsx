@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatMoneyInput, parseMoneyInput } from "@/shared/lib/money-input";
@@ -33,6 +34,7 @@ export function PersonalGoalForm({ onSaved }: PersonalGoalFormProps) {
   const [currentAmount, setCurrentAmount] = useState("");
   const [deadline, setDeadline] = useState("");
   const [isDeadlineCalendarOpen, setIsDeadlineCalendarOpen] = useState(false);
+  const [isShared, setIsShared] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -51,12 +53,14 @@ export function PersonalGoalForm({ onSaved }: PersonalGoalFormProps) {
         name: name.trim(),
         targetAmount: target,
         currentAmount: Number.isFinite(current) ? current : 0,
-        deadline: deadline || undefined
+        deadline: deadline || undefined,
+        isShared
       });
       setName("");
       setTargetAmount("");
       setCurrentAmount("");
       setDeadline("");
+      setIsShared(false);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "No se pudo crear la meta.");
     }
@@ -134,6 +138,10 @@ export function PersonalGoalForm({ onSaved }: PersonalGoalFormProps) {
           ) : null}
         </PopoverContent>
       </Popover>
+      <label className="flex items-center gap-2 text-sm">
+        <Checkbox checked={isShared} onCheckedChange={(checked) => setIsShared(checked === true)} />
+        Compartir meta con mi pareja
+      </label>
       <Button
         type="submit"
         variant="outline"

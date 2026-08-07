@@ -46,6 +46,7 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
   const [goalName, setGoalName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [isGoalShared, setIsGoalShared] = useState(false);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
   const [contributionToDelete, setContributionToDelete] = useState<ContributionEditor | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,6 +74,7 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
     setGoalName(goal.name);
     setTargetAmount(formatMoneyInput(String(goal.targetAmount)));
     setDeadline(goal.deadline ?? "");
+    setIsGoalShared(goal.isShared);
   };
 
   const handleContribution = async (event: FormEvent<HTMLFormElement>) => {
@@ -133,7 +135,8 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
       await financeService.updateGoal(editingGoal.id, {
         name: goalName.trim(),
         targetAmount: target,
-        deadline: deadline || null
+        deadline: deadline || null,
+        isShared: isGoalShared
       });
       await onContributionSaved();
       setEditingGoal(null);
@@ -204,6 +207,9 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
                     {goal.deadline ? (
                       <p className="text-xs text-muted-foreground">Fecha meta: {goal.deadline}</p>
                     ) : null}
+                    {goal.isShared ? (
+                      <p className="text-xs text-success">Meta compartida con tu pareja</p>
+                    ) : null}
                   </div>
                   {goal.isOwner ? <div className="flex gap-1">
                     <Button
@@ -236,7 +242,7 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
                   />
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  {goal.isOwner ? (
+                  {goal.isOwner || goal.isShared ? (
                     <Button
                       type="button"
                       size="sm"
@@ -267,7 +273,7 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
                               <span className="text-[10px] text-success">En pareja</span>
                             ) : null}
                             <span className="font-medium">{formatCurrency(contribution.amount)}</span>
-                            {goal.isOwner ? (
+                            {contribution.isOwner ? (
                               <>
                                 <Button
                                   type="button"
@@ -373,6 +379,13 @@ export function GoalProgress({ goals, month, onContributionSaved }: GoalProgress
               type="date"
               className="h-10 rounded-xl bg-surface"
             />
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={isGoalShared}
+                onCheckedChange={(checked) => setIsGoalShared(checked === true)}
+              />
+              Compartir meta con mi pareja
+            </label>
             {error ? <p className="text-xs text-destructive">{error}</p> : null}
             <Button type="submit" className="w-full" disabled={isSaving}>
               {isSaving ? "Guardando..." : "Guardar cambios"}

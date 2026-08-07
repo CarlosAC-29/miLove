@@ -6,6 +6,7 @@ interface CreatePersonalGoalInput {
   targetAmount: number;
   currentAmount: number;
   deadline?: string;
+  isShared?: boolean;
 }
 
 export function useCreatePersonalGoal(onSuccess?: () => Promise<void> | void) {

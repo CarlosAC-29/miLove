@@ -315,14 +315,26 @@ export const financeRepository = {
   async listGoals(userId: string, context: FinanceContext) {
     const result = await db.query(
       `select g.id, g.name, g.target_amount as "targetAmount",
-              (case when g.user_id = $1 then g.current_amount else 0 end)
-                + coalesce(sum(gc.amount) filter (where g.user_id = $1 or gc.is_shared), 0) as "currentAmount",
-              g.context, g.deadline, g.user_id = $1 as "isOwner"
+              (case when g.user_id = $1 or g.is_shared then g.current_amount else 0 end)
+                + coalesce(
+                  sum(gc.amount) filter (where g.user_id = $1 or g.is_shared or gc.is_shared),
+                  0
+                ) as "currentAmount",
+              g.context, g.deadline, g.is_shared as "isShared", g.user_id = $1 as "isOwner"
        from goals g
        left join goal_contributions gc on gc.goal_id = g.id
        where g.context = $2
          and (
            g.user_id = $1
+           or (
+             g.is_shared
+             and exists (
+               select 1
+               from couple_members owner_member
+               join couple_members viewer_member on viewer_member.couple_id = owner_member.couple_id
+               where owner_member.user_id = g.user_id and viewer_member.user_id = $1
+             )
+           )
            or exists (
              select 1
              from goal_contributions shared_contribution
@@ -339,14 +351,16 @@ export const financeRepository = {
     );
     const contributionResult = await db.query(
       `select gc.id, gc.goal_id as "goalId", gc.amount, to_char(gc.month, 'YYYY-MM') as month,
-              gc.is_shared as "isShared"
+              gc.is_shared as "isShared", gc.contributor_id as "contributorId",
+              profile.name as "contributorName", gc.contributor_id = $1 as "isOwner"
        from goal_contributions gc
        join goals g on g.id = gc.goal_id
+       join profiles profile on profile.id = gc.contributor_id
        where g.context = $2
          and (
            g.user_id = $1
            or (
-             gc.is_shared
+             (g.is_shared or gc.is_shared)
              and exists (
                select 1
                from couple_members owner_member
@@ -360,7 +374,15 @@ export const financeRepository = {
     );
     const contributionsByGoal = new Map<
       string,
-      Array<{ id: string; amount: number; month: string; isShared: boolean }>
+      Array<{
+        id: string;
+        amount: number;
+        month: string;
+        isShared: boolean;
+        contributorId: string;
+        contributorName: string;
+        isOwner: boolean;
+      }>
     >();
     for (const contribution of contributionResult.rows) {
       const contributions = contributionsByGoal.get(contribution.goalId) ?? [];
@@ -369,6 +391,9 @@ export const financeRepository = {
         amount: Number(contribution.amount),
         month: contribution.month,
         isShared: contribution.isShared,
+        contributorId: contribution.contributorId,
+        contributorName: contribution.contributorName,
+        isOwner: contribution.isOwner,
       });
       contributionsByGoal.set(contribution.goalId, contributions);
     }
@@ -388,12 +413,33 @@ export const financeRepository = {
     currentAmount: number;
     context: FinanceContext;
     deadline?: string;
+    isShared?: boolean;
+    coupleId?: string;
   }) {
     const result = await db.query(
-      `insert into goals (name, target_amount, current_amount, context, deadline, user_id)
-       values ($1, $2, $3, $4, $5::date, $6)
-       returning id, name, target_amount as "targetAmount", current_amount as "currentAmount", context, deadline`,
-      [input.name, input.targetAmount, input.currentAmount, input.context, input.deadline ?? null, input.userId],
+      `insert into goals (
+         name,
+         target_amount,
+         current_amount,
+         context,
+         deadline,
+         is_shared,
+         user_id,
+         couple_id
+       )
+       values ($1, $2, $3, $4, $5::date, $6, $7, $8)
+       returning id, name, target_amount as "targetAmount", current_amount as "currentAmount", context, deadline,
+                 is_shared as "isShared"`,
+      [
+        input.name,
+        input.targetAmount,
+        input.currentAmount,
+        input.context,
+        input.deadline ?? null,
+        input.isShared ?? false,
+        input.userId,
+        input.coupleId ?? null,
+      ],
     );
     const row = result.rows[0]!;
     return {
@@ -404,16 +450,91 @@ export const financeRepository = {
     };
   },
 
+  async ensureCoupleIdForPartner(userId: string) {
+    const result = await db.query<{ coupleId: string }>(
+      `with partner as (
+         select partner_id
+         from user_partners
+         where user_id = $1
+       ),
+       existing_couple as (
+         select own_member.couple_id
+         from couple_members own_member
+         join partner on true
+         where own_member.user_id = $1
+           and exists (
+             select 1
+             from couple_members partner_member
+             where partner_member.couple_id = own_member.couple_id
+               and partner_member.user_id = partner.partner_id
+           )
+         order by own_member.id
+         limit 1
+       ),
+       new_couple as (
+         insert into couples (name, created_by)
+         select 'Finanzas compartidas', $1
+         from partner
+         where not exists (select 1 from existing_couple)
+         returning id
+       ),
+       selected_couple as (
+         select couple_id as id from existing_couple
+         union all
+         select id from new_couple
+       ),
+       add_owner as (
+         insert into couple_members (
+           couple_id,
+           user_id,
+           display_name,
+           contribution_amount
+         )
+         select selected_couple.id, profile.id, profile.name, 0
+         from selected_couple
+         join profiles profile on profile.id = $1
+         on conflict (couple_id, user_id) do nothing
+       ),
+       add_partner as (
+         insert into couple_members (
+           couple_id,
+           user_id,
+           display_name,
+           contribution_amount
+         )
+         select selected_couple.id, profile.id, profile.name, 0
+         from selected_couple
+         join partner on true
+         join profiles profile on profile.id = partner.partner_id
+         on conflict (couple_id, user_id) do nothing
+       )
+       select id as "coupleId"
+       from selected_couple
+       limit 1`,
+      [userId],
+    );
+    return result.rows[0]?.coupleId ?? null;
+  },
+
   async createGoalContribution(
     userId: string,
     goalId: string,
     input: { amount: number; month: string; isShared?: boolean },
   ) {
     const result = await db.query(
-      `insert into goal_contributions (goal_id, amount, month, is_shared)
-       select id, $3, $4::date, $5
-       from goals
-       where id = $1 and user_id = $2
+      `insert into goal_contributions (goal_id, amount, month, is_shared, contributor_id)
+       select g.id, $3, $4::date, g.is_shared or $5, $2
+       from goals g
+       where g.id = $1
+         and (
+           g.user_id = $2
+           or (
+             g.is_shared
+             and g.couple_id in (
+               select couple_id from couple_members where user_id = $2
+             )
+           )
+         )
        returning id`,
       [goalId, userId, input.amount, `${input.month}-01`, input.isShared ?? false],
     );
@@ -423,7 +544,7 @@ export const financeRepository = {
   async updateGoal(
     userId: string,
     goalId: string,
-    patch: { name?: string; targetAmount?: number; deadline?: string | null },
+    patch: { name?: string; targetAmount?: number; deadline?: string | null; isShared?: boolean },
   ) {
     const fields: string[] = [];
     const values: unknown[] = [];
@@ -439,6 +560,10 @@ export const financeRepository = {
       values.push(patch.deadline);
       fields.push(`deadline = $${values.length}::date`);
     }
+    if (patch.isShared !== undefined) {
+      values.push(patch.isShared);
+      fields.push(`is_shared = $${values.length}`);
+    }
     if (fields.length === 0) return null;
 
     values.push(goalId, userId);
@@ -446,7 +571,8 @@ export const financeRepository = {
       `update goals
        set ${fields.join(", ")}
        where id = $${values.length - 1} and user_id = $${values.length}
-       returning id, name, target_amount as "targetAmount", current_amount as "currentAmount", context, deadline`,
+       returning id, name, target_amount as "targetAmount", current_amount as "currentAmount", context, deadline,
+                 is_shared as "isShared"`,
       values,
     );
     const row = result.rows[0];
@@ -474,7 +600,10 @@ export const financeRepository = {
       `update goal_contributions gc
        set amount = $4, month = $5::date, is_shared = $6
        from goals g
-       where gc.id = $1 and gc.goal_id = g.id and g.id = $2 and g.user_id = $3
+       where gc.id = $1
+         and gc.goal_id = g.id
+         and g.id = $2
+         and gc.contributor_id = $3
        returning gc.id`,
       [contributionId, goalId, userId, input.amount, `${input.month}-01`, input.isShared ?? false],
     );
@@ -485,7 +614,10 @@ export const financeRepository = {
     const result = await db.query(
       `delete from goal_contributions gc
        using goals g
-       where gc.id = $1 and gc.goal_id = g.id and g.id = $2 and g.user_id = $3
+       where gc.id = $1
+         and gc.goal_id = g.id
+         and g.id = $2
+         and gc.contributor_id = $3
        returning gc.id`,
       [contributionId, goalId, userId],
     );

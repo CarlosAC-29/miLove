@@ -108,9 +108,36 @@ export const financeService = {
       currentAmount: number;
       context: FinanceContext;
       deadline?: string;
+      isShared?: boolean;
     },
   ) {
-    return financeRepository.createGoal({ userId, ...input });
+    if (!input.isShared) {
+      return financeRepository.createGoal({ userId, ...input });
+    }
+
+    return this.createSharedGoal(userId, input);
+  },
+
+  async createSharedGoal(
+    userId: string,
+    input: {
+      name: string;
+      targetAmount: number;
+      currentAmount: number;
+      context: FinanceContext;
+      deadline?: string;
+      isShared?: boolean;
+    },
+  ) {
+    const coupleId = await financeRepository.ensureCoupleIdForPartner(userId);
+    if (!coupleId) throw new HttpError(409, "You must link a partner before sharing a goal.");
+
+    return financeRepository.createGoal({
+      ...input,
+      userId,
+      coupleId,
+      isShared: true,
+    });
   },
 
   async createGoalContribution(
@@ -125,7 +152,7 @@ export const financeService = {
   async updateGoal(
     userId: string,
     goalId: string,
-    input: { name?: string; targetAmount?: number; deadline?: string | null },
+    input: { name?: string; targetAmount?: number; deadline?: string | null; isShared?: boolean },
   ) {
     const updated = await financeRepository.updateGoal(userId, goalId, input);
     if (!updated) throw new HttpError(404, "Goal not found.");

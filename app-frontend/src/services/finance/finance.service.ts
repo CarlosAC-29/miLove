@@ -286,7 +286,7 @@ export const financeService = {
 
   async updateGoal(
     goalId: string,
-    input: { name: string; targetAmount: number; deadline: string | null }
+    input: { name: string; targetAmount: number; deadline: string | null; isShared: boolean }
   ): Promise<void> {
     if (env.useMocks) {
       await delay(300);

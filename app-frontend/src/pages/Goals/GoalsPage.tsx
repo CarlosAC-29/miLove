@@ -22,12 +22,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { ApiError } from "@/services/api/errors";
+import { goalProgress, type Goal } from "@/entities/goal/types";
+import { financeService } from "@/services/finance/finance.service";
 import { goalsService, type GoalDto } from "@/services/goals.service";
+import { formatCurrency } from "@/shared/lib/format";
 import { useAuthStore } from "@/stores/auth.store";
 import { Screen } from "@/shared/ui/Screen";
 import { SectionTitle, SurfaceCard } from "@/shared/ui/SurfaceCard";
 
 const GOALS_KEY = ["goals", "list"] as const;
+const FINANCE_GOALS_KEY = ["finance", "goals", "personal"] as const;
 
 function getErrorMessage(error: unknown) {
   if (!error || typeof error !== "object") return "No se pudo completar la operación.";
@@ -61,6 +65,11 @@ export function GoalsPage() {
   const goalsQuery = useQuery({
     queryKey: GOALS_KEY,
     queryFn: () => goalsService.listGoals(),
+    refetchInterval: 5000
+  });
+  const financialGoalsQuery = useQuery({
+    queryKey: FINANCE_GOALS_KEY,
+    queryFn: () => financeService.listGoals("personal"),
     refetchInterval: 5000
   });
 
@@ -157,6 +166,7 @@ export function GoalsPage() {
   };
 
   const isSaving = createGoalMutation.isPending || updateGoalMutation.isPending;
+  const sharedFinancialGoals = (financialGoalsQuery.data ?? []).filter((goal) => goal.isShared);
 
   return (
     <Screen title="Metas" subtitle="Listado compartido de metas">
@@ -210,6 +220,50 @@ export function GoalsPage() {
           ))
         )}
       </div>
+      {sharedFinancialGoals.length > 0 ? (
+        <div className="mt-6">
+          <SectionTitle>Metas financieras compartidas</SectionTitle>
+          <div className="space-y-3">
+            {sharedFinancialGoals.map((goal: Goal) => {
+              const progress = goalProgress(goal);
+              return (
+                <SurfaceCard key={goal.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-base">{goal.name}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatCurrency(goal.currentAmount)} de {formatCurrency(goal.targetAmount)}
+                      </p>
+                      {goal.deadline ? (
+                        <p className="mt-1 text-xs text-muted-foreground">Fecha meta: {goal.deadline}</p>
+                      ) : null}
+                    </div>
+                    <span className="text-sm font-medium">{progress}%</span>
+                  </div>
+                  <div className="mt-3 h-2 rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-success" style={{ width: `${progress}%` }} />
+                  </div>
+                  <div className="mt-4 border-t border-border pt-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">Aportes</p>
+                    {goal.contributions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Aún no hay aportes.</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {goal.contributions.map((contribution) => (
+                          <div key={contribution.id} className="flex justify-between gap-3 text-sm">
+                            <span>{contribution.contributorName ?? "Aporte inicial"}</span>
+                            <span className="font-medium">{formatCurrency(contribution.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </SurfaceCard>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       {formError ? <p className="mt-3 text-xs text-destructive">{formError}</p> : null}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
