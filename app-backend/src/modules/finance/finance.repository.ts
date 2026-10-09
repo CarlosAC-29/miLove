@@ -129,6 +129,20 @@ export const financeRepository = {
          source.recurrence_source_id
        from source_transactions source
        cross join future_months future
+       where not exists (
+         select 1
+         from transactions existing
+         where existing.user_id = source.user_id
+           and existing.recurrence_source_id = source.recurrence_source_id
+           and existing.date = (
+             future.month_start
+             + least(
+               extract(day from source.date)::integer,
+               extract(day from (future.month_start + interval '1 month - 1 day'))::integer
+             )
+             - 1
+           )::date
+       )
        on conflict (user_id, recurrence_source_id, date)
          where recurrence_source_id is not null
          do nothing
@@ -187,6 +201,59 @@ export const financeRepository = {
 
   async deleteTransaction(userId: string, id: string) {
     await db.query("delete from transactions where id = $1 and user_id = $2", [id, userId]);
+  },
+
+  async clearMonth(userId: string, context: FinanceContext, month: string) {
+    const client = await db.connect();
+    try {
+      await client.query("begin");
+      await client.query(
+        `with deleted_sources as (
+           select id
+           from transactions
+           where user_id = $1
+             and context = $2
+             and to_char(date, 'YYYY-MM') = $3
+         ),
+         replacement_sources as (
+           select distinct on (recurrence_source_id)
+             recurrence_source_id,
+             id as replacement_id
+           from transactions
+           where recurrence_source_id in (select id from deleted_sources)
+           order by recurrence_source_id, date asc
+         )
+         update transactions future
+         set recurrence_source_id = replacement.replacement_id
+         from replacement_sources replacement
+         where future.recurrence_source_id = replacement.recurrence_source_id`,
+        [userId, context, month],
+      );
+      const deletedTransactions = await client.query(
+        `delete from transactions
+         where user_id = $1
+           and context = $2
+           and to_char(date, 'YYYY-MM') = $3`,
+        [userId, context, month],
+      );
+      const deletedBudgets = await client.query(
+        `delete from budgets
+         where user_id = $1
+           and context = $2
+           and to_char(month, 'YYYY-MM') = $3`,
+        [userId, context, month],
+      );
+      await client.query("commit");
+      return {
+        transactions: deletedTransactions.rowCount ?? 0,
+        budgets: deletedBudgets.rowCount ?? 0,
+      };
+    } catch (error) {
+      await client.query("rollback");
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   async listBudgets(userId: string, context: FinanceContext, month?: string) {

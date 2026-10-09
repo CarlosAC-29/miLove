@@ -35,6 +35,16 @@ function toSession(response: AuthApiResponse): AuthSession {
  * Componente -> Hook -> authService -> (mock | API REST + JWT).
  */
 export const authService = {
+  startDemo(): AuthSession {
+    const session: AuthSession = {
+      user: mapUser(MOCK_USER),
+      accessToken: `mock.demo.${MOCK_USER.id}`,
+      isDemo: true
+    };
+    sessionStorageService.write(session);
+    return session;
+  },
+
   async signInWithEmail(input: SignInWithEmailInput): Promise<AuthSession> {
     if (env.useMocks) {
       await delay(500);

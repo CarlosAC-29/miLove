@@ -24,6 +24,9 @@ export const sessionStorageService = {
     if (typeof window === "undefined") return;
     window.localStorage.removeItem(STORAGE_KEY);
   },
+  isDemo(): boolean {
+    return this.read()?.isDemo === true;
+  },
   isExpired(session: AuthSession): boolean {
     if (!session.expiresAt) return false;
     const expiresAtMs = new Date(session.expiresAt).getTime();

@@ -14,6 +14,9 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground">
             Organiza tu vida, tus finanzas y tus momentos juntos.
           </p>
+          <p className="text-xs text-muted-foreground">
+            Puedes explorar la app con datos de ejemplo sin crear una cuenta.
+          </p>
         </div>
 
         <LoginForm mode="login" />

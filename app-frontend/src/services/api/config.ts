@@ -24,6 +24,7 @@ export const API_ROUTES = {
   finance: {
     transactions: "/finance/transactions",
     extendFixedTransactions: "/finance/transactions/extend-fixed",
+    clearMonth: "/finance/month",
     summary: "/finance/summary",
     budgets: "/finance/budgets",
     budgetById: (id: string) => `/finance/budgets/${id}`,

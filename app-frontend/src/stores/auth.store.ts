@@ -17,6 +17,7 @@ interface AuthState {
   login: (session: AuthSession) => void;
   updateUser: (user: User) => void;
   hydrateSession: () => void;
+  signInAsGuest: () => Promise<void>;
   signInWithEmail: (input: SignInWithEmailInput) => Promise<void>;
   signUpWithEmail: (input: SignUpWithEmailInput) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -52,6 +53,11 @@ export const useAuthStore = create<AuthState>()((set, get) => {
     hydrateSession: () => {
       const session = authService.restoreSession();
       set({ ...applySession(session), hasHydrated: true });
+    },
+    signInAsGuest: async () => {
+      set({ isLoading: true });
+      const session = authService.startDemo();
+      set({ ...applySession(session), isLoading: false });
     },
     signInWithEmail: async (input) => {
       set({ isLoading: true });

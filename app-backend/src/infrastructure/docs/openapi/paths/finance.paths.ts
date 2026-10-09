@@ -138,6 +138,44 @@ export const financePaths = {
       },
     },
   },
+  "/finance/month": {
+    delete: {
+      tags: ["Finance"],
+      summary: "Limpiar movimientos y presupuestos de un mes",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "context",
+          in: "query",
+          required: true,
+          schema: { type: "string", enum: ["personal", "household"] },
+        },
+        {
+          name: "month",
+          in: "query",
+          required: true,
+          schema: { type: "string", example: "2026-10" },
+        },
+      ],
+      responses: {
+        "200": {
+          description: "Datos mensuales eliminados",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  transactions: { type: "integer", minimum: 0 },
+                  budgets: { type: "integer", minimum: 0 },
+                },
+                required: ["transactions", "budgets"],
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   "/finance/summary": {
     get: {
       tags: ["Finance"],

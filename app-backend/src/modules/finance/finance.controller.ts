@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { financeService } from "./finance.service.js";
 import {
+  clearFinanceMonthSchema,
   createBudgetSchema,
   createGoalSchema,
   createGoalContributionSchema,
@@ -45,6 +46,12 @@ export const financeController = {
   async deleteTransaction(request: Request, response: Response) {
     await financeService.deleteTransaction(request.auth!.sub, request.params.id);
     return response.status(204).send();
+  },
+
+  async clearMonth(request: Request, response: Response) {
+    const query = clearFinanceMonthSchema.parse(request.query);
+    const deleted = await financeService.clearMonth(request.auth!.sub, query);
+    return response.json(deleted);
   },
 
   async listBudgets(request: Request, response: Response) {

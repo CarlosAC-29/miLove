@@ -43,7 +43,6 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
@@ -60,7 +59,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
+              window.location.reload();
               reset();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -149,6 +148,7 @@ function RootComponent() {
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isDemo = useAuthStore((state) => state.session?.isDemo === true);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const hydrateSession = useAuthStore((state) => state.hydrateSession);
 
@@ -182,6 +182,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <div className="min-h-screen bg-background">
+          {isDemo ? (
+            <div className="bg-primary px-4 py-2 text-center text-xs font-medium text-primary-foreground">
+              Estas explorando una demo con datos de ejemplo. Los cambios se guardan solo en este
+              dispositivo.
+            </div>
+          ) : null}
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           {showBottomNavigation ? <BottomNavigation /> : null}

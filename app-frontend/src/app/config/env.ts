@@ -1,3 +1,5 @@
+import { sessionStorageService } from "@/services/auth/session.storage";
+
 /**
  * Configuración de entorno tipada.
  *
@@ -13,6 +15,8 @@ export interface AppEnv {
 
 export const env: AppEnv = {
   apiBaseUrl: import.meta.env["VITE_API_BASE_URL"] ?? "/api",
-  useMocks: (import.meta.env["VITE_USE_MOCKS"] ?? "true") !== "false",
+  get useMocks() {
+    return (import.meta.env["VITE_USE_MOCKS"] ?? "true") !== "false" || sessionStorageService.isDemo();
+  },
   apiTimeoutMs: Number(import.meta.env["VITE_API_TIMEOUT_MS"] ?? 15000)
 };

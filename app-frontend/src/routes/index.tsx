@@ -1,6 +1,9 @@
-import { Navigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    throw redirect({ to: "/home" });
+  },
   head: () => ({
     meta: [
       { title: "MiLove — El espacio digital de su relación" },
@@ -15,6 +18,5 @@ export const Route = createFileRoute("/")({
         content: "Un ecosistema de módulos para organizar y mejorar la vida en pareja."
       }
     ]
-  }),
-  component: () => <Navigate to="/home" />
+  })
 });

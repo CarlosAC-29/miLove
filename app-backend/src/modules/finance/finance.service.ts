@@ -68,6 +68,10 @@ export const financeService = {
     return financeRepository.deleteTransaction(userId, id);
   },
 
+  clearMonth(userId: string, input: { context: FinanceContext; month: string }) {
+    return financeRepository.clearMonth(userId, input.context, input.month);
+  },
+
   listBudgets(userId: string, context: FinanceContext, month?: string) {
     return financeRepository.listBudgets(userId, context, month);
   },

@@ -18,7 +18,7 @@ interface EmailLoginFormState {
 }
 
 export function LoginForm({ mode }: LoginFormProps) {
-  const { isLoading, loginWithEmail, registerWithEmail } = useLogin();
+  const { isLoading, enterDemo, loginWithEmail, registerWithEmail } = useLogin();
   const [error, setError] = useState<string | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [form, setForm] = useState<EmailLoginFormState>({
@@ -52,6 +52,19 @@ export function LoginForm({ mode }: LoginFormProps) {
         caughtError instanceof Error
           ? caughtError.message
           : "No se pudo completar la autenticacion."
+      );
+    }
+  };
+
+  const handleDemo = async () => {
+    setError(null);
+    try {
+      await enterDemo();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudo iniciar el modo de demostracion."
       );
     }
   };
@@ -118,6 +131,18 @@ export function LoginForm({ mode }: LoginFormProps) {
       <Button type="submit" className="h-11 w-full rounded-xl text-sm" disabled={isLoading}>
         {mode === "register" ? "Crear cuenta con email" : "Continuar con email"}
       </Button>
+
+      {mode === "login" ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full rounded-xl text-sm"
+          disabled={isLoading}
+          onClick={() => void handleDemo()}
+        >
+          Explorar demo sin registrarte
+        </Button>
+      ) : null}
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 

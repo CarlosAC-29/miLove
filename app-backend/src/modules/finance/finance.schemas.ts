@@ -23,6 +23,11 @@ export const extendFixedTransactionsSchema = z.object({
   month: financeMonthSchema,
 });
 
+export const clearFinanceMonthSchema = z.object({
+  context: financeContextSchema,
+  month: financeMonthSchema,
+});
+
 export const createBudgetSchema = z.object({
   name: z.string().min(1),
   categoryId: z.string().min(1),

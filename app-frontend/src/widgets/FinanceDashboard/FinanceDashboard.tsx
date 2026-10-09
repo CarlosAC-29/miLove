@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, CalendarPlus, Target, Wallet } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, CalendarPlus, Target, Trash2, Wallet } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -51,6 +51,8 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isExtendingFixedTransactions, setIsExtendingFixedTransactions] = useState(false);
   const [isExtendConfirmationOpen, setIsExtendConfirmationOpen] = useState(false);
+  const [isClearMonthConfirmationOpen, setIsClearMonthConfirmationOpen] = useState(false);
+  const [isClearingMonth, setIsClearingMonth] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
@@ -111,6 +113,26 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
       );
     } finally {
       setIsExtendingFixedTransactions(false);
+    }
+  };
+
+  const handleClearMonth = async () => {
+    setActionError(null);
+    setActionNotice(null);
+    setIsClearingMonth(true);
+    try {
+      const deleted = await financeService.clearMonth(context, month);
+      await reload();
+      setActionNotice(
+        `Se eliminaron ${deleted.transactions} movimientos y ${deleted.budgets} presupuestos de este mes.`
+      );
+      setIsClearMonthConfirmationOpen(false);
+    } catch (caughtError) {
+      setActionError(
+        caughtError instanceof Error ? caughtError.message : "No se pudo limpiar el mes."
+      );
+    } finally {
+      setIsClearingMonth(false);
     }
   };
 
@@ -330,6 +352,17 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
             <CalendarPlus className="size-5" />
             <span className="text-center text-xs leading-tight">Mantener fijos 3 meses</span>
           </Button>
+
+          <Button
+            type="button"
+            variant="destructive"
+            className="h-20 flex-col gap-1 rounded-xl whitespace-normal"
+            onClick={() => setIsClearMonthConfirmationOpen(true)}
+            disabled={isClearingMonth || (transactions.length === 0 && budgets.length === 0)}
+          >
+            <Trash2 className="size-5" />
+            <span className="text-center text-xs leading-tight">Limpiar mes</span>
+          </Button>
         </div>
       </SurfaceCard>
 
@@ -350,6 +383,32 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
               disabled={isExtendingFixedTransactions}
             >
               Confirmar
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={isClearMonthConfirmationOpen}
+        onOpenChange={setIsClearMonthConfirmationOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Limpiar este mes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminarán permanentemente los gastos, ingresos y presupuestos de {month}. Las
+              metas y los meses posteriores no se modificarán.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isClearingMonth}>Cancelar</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void handleClearMonth()}
+              disabled={isClearingMonth}
+            >
+              Limpiar mes
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

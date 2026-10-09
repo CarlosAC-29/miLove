@@ -12,6 +12,7 @@ router.post("/transactions", asyncHandler(financeController.createTransaction));
 router.post("/transactions/extend-fixed", asyncHandler(financeController.extendFixedTransactions));
 router.put("/transactions/:id", asyncHandler(financeController.updateTransaction));
 router.delete("/transactions/:id", asyncHandler(financeController.deleteTransaction));
+router.delete("/month", asyncHandler(financeController.clearMonth));
 router.get("/summary", asyncHandler(financeController.summary));
 
 router.get("/budgets", asyncHandler(financeController.listBudgets));

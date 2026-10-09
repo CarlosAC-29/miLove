@@ -32,6 +32,13 @@ El frontend consume el backend vía `src/services/api/client.ts` y usa:
 - Endpoints bajo `VITE_API_BASE_URL`.
 - Flujo auth: login/register/logout/session/refresh.
 
+## Modo demostración
+
+La pantalla de inicio de sesión incluye **“Explorar demo sin registrarte”**. Crea una sesión local
+sin llamar al backend y carga los datos simulados incluidos en la aplicación, aun cuando
+`VITE_USE_MOCKS=false`. Los cambios sobre los datos demo solo permanecen en la memoria del
+navegador y se descartan al recargar la aplicación o cerrar sesión.
+
 ## Estructura principal
 
 ```text

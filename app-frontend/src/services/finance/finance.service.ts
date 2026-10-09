@@ -40,6 +40,11 @@ export interface FinanceInsightDto {
   message: string;
 }
 
+export interface ClearMonthResult {
+  transactions: number;
+  budgets: number;
+}
+
 function sortByDateDesc(a: TransactionDto, b: TransactionDto): number {
   return b.date.localeCompare(a.date);
 }
@@ -139,6 +144,28 @@ export const financeService = {
       { context, month }
     );
     return response.created;
+  },
+
+  async clearMonth(context: FinanceContext, month: string): Promise<ClearMonthResult> {
+    if (env.useMocks) {
+      await delay(300);
+      const initialTransactionCount = memory.transactions.length;
+      const initialBudgetCount = memory.budgets.length;
+      memory.transactions = memory.transactions.filter(
+        (transaction) =>
+          transaction.context !== context || normalizeMonth(transaction.date) !== month
+      );
+      memory.budgets = memory.budgets.filter(
+        (budget) => budget.context !== context || budget.month !== month
+      );
+      return {
+        transactions: initialTransactionCount - memory.transactions.length,
+        budgets: initialBudgetCount - memory.budgets.length
+      };
+    }
+    return apiClient.delete<ClearMonthResult>(API_ROUTES.finance.clearMonth, {
+      query: { context, month }
+    });
   },
 
   async updateTransaction(
