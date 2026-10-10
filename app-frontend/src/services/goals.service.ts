@@ -16,7 +16,7 @@ export interface UpsertGoalInput {
   description?: string;
 }
 
-const demoGoals = createDemoStore<GoalDto>([
+const demoGoals = createDemoStore<GoalDto>("milove.demo.goals", [
   {
     id: "demo-goal-1",
     title: "Escapada de fin de semana",

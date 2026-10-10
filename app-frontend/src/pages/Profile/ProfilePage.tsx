@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Heart, LoaderCircle, LogOut, PencilLine, UserRound } from "lucide-react";
+import { CircleHelp, Heart, LoaderCircle, LogOut, PencilLine, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { usersService } from "@/services/users.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { Screen } from "@/shared/ui/Screen";
 import { SurfaceCard } from "@/shared/ui/SurfaceCard";
+import { HowItWorksDialog } from "@/widgets/HowItWorks/HowItWorksDialog";
 
 function getErrorMessage(error: unknown) {
   if (!error || typeof error !== "object") return "No se pudo actualizar el perfil.";
@@ -41,6 +42,7 @@ export function ProfilePage() {
   const updateUser = useAuthStore((state) => state.updateUser);
   const { isLoading, performLogout } = useLogout();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -136,6 +138,15 @@ export function ProfilePage() {
           type="button"
           variant="outline"
           className="h-11 w-full justify-center rounded-xl"
+          onClick={() => setIsHowItWorksOpen(true)}
+        >
+          <CircleHelp className="size-4" />
+          Cómo funciona MiLove
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full justify-center rounded-xl"
           onClick={performLogout}
           disabled={isLoading}
         >
@@ -199,12 +210,17 @@ export function ProfilePage() {
             >
               Cancelar
             </Button>
-            <Button type="button" onClick={handleSaveProfile} disabled={updateProfileMutation.isPending}>
+            <Button
+              type="button"
+              onClick={handleSaveProfile}
+              disabled={updateProfileMutation.isPending}
+            >
               {updateProfileMutation.isPending ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <HowItWorksDialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
     </Screen>
   );
 }

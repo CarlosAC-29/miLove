@@ -18,7 +18,7 @@ export interface UpsertMovieInput {
   startAt: string;
 }
 
-const demoMovies = createDemoStore<MovieDto>([
+const demoMovies = createDemoStore<MovieDto>("milove.demo.movies", [
   {
     id: "demo-movie-1",
     title: "Una película para viernes",

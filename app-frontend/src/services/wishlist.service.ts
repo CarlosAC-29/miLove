@@ -18,7 +18,7 @@ export interface UpsertWishlistItemInput {
   webUrl?: string;
 }
 
-const demoWishlist = createDemoStore<WishlistItemDto>([
+const demoWishlist = createDemoStore<WishlistItemDto>("milove.demo.wishlist", [
   {
     id: "demo-wishlist-1",
     title: "Juego de tazas",

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -7,7 +6,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import type { FinanceContext } from "@/entities/transaction/types";
 import { Screen } from "@/shared/ui/Screen";
 import { SurfaceCard } from "@/shared/ui/SurfaceCard";
 import { FinanceDashboard } from "@/widgets/FinanceDashboard/FinanceDashboard";
@@ -33,7 +31,6 @@ function buildYearOptions() {
 }
 
 export function FinancePage() {
-  const [context, setContext] = useState<FinanceContext>("personal");
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [selectedYear, selectedMonth] = month.split("-");
   const yearOptions = buildYearOptions();
@@ -41,11 +38,11 @@ export function FinancePage() {
   return (
     <Screen
       title="Finanzas"
-      subtitle="Controla presupuesto, gastos e ingresos por mes y por contexto"
+      subtitle="Controla presupuesto, gastos e ingresos por mes"
     >
       <div className="space-y-4">
         <SurfaceCard className="space-y-3">
-          <h2 className="text-sm font-semibold">Selecciona el espacio</h2>
+          <h2 className="text-sm font-semibold">Selecciona el periodo</h2>
           <div className="grid grid-cols-2 gap-2">
             <Select
               value={selectedMonth}
@@ -78,27 +75,9 @@ export function FinancePage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-1 gap-2">
-            <Button
-              type="button"
-              variant={context === "personal" ? "default" : "outline"}
-              className="h-11 justify-start rounded-xl"
-              onClick={() => setContext("personal")}
-            >
-              👤 Mis Finanzas
-            </Button>
-            <Button
-              type="button"
-              variant={context === "household" ? "default" : "outline"}
-              className="h-11 justify-start rounded-xl"
-              onClick={() => setContext("household")}
-            >
-              🏠 Finanzas Hogar
-            </Button>
-          </div>
         </SurfaceCard>
 
-        <FinanceDashboard context={context} month={month} />
+        <FinanceDashboard context="personal" month={month} />
       </div>
     </Screen>
   );

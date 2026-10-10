@@ -33,18 +33,29 @@ import { financeService } from "@/services/finance/finance.service";
 import { SurfaceCard } from "@/shared/ui/SurfaceCard";
 import { BalanceCard } from "@/widgets/BalanceCard/BalanceCard";
 import { BudgetCard } from "@/widgets/BudgetCard/BudgetCard";
-import { ExpenseChart } from "@/widgets/ExpenseChart/ExpenseChart";
 import { GoalProgress } from "@/widgets/GoalProgress/GoalProgress";
 import { TransactionList } from "@/widgets/TransactionList/TransactionList";
 import { SharedGoalForm } from "@/features/finance/household/createSharedGoal/SharedGoalForm";
 import { FinancialAIAssistant } from "./FinancialAIAssistant";
 
 export function FinanceDashboard({ context, month }: { context: FinanceContext; month: string }) {
-  const { transactions, budgets, goals, householdProfile, summary, isLoading, error, reload } =
-    useFinanceDashboard(context, month);
-  const { deletePersonalTransaction } = useDeletePersonalTransaction(reload);
-  const { editPersonalTransaction } = useEditPersonalTransaction(reload);
-  const { editSharedExpense } = useEditSharedExpense(reload);
+  const {
+    transactions,
+    budgets,
+    goals,
+    householdProfile,
+    summary,
+    isLoading,
+    error,
+    refreshTransactionsAndBudgets,
+    refreshBudgets,
+    refreshGoals,
+    refreshHouseholdProfile,
+    retry
+  } = useFinanceDashboard(context, month);
+  const { deletePersonalTransaction } = useDeletePersonalTransaction(refreshTransactionsAndBudgets);
+  const { editPersonalTransaction } = useEditPersonalTransaction(refreshTransactionsAndBudgets);
+  const { editSharedExpense } = useEditSharedExpense(refreshTransactionsAndBudgets);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [transactionModalType, setTransactionModalType] = useState<TransactionType>("expense");
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
@@ -122,7 +133,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
     setIsClearingMonth(true);
     try {
       const deleted = await financeService.clearMonth(context, month);
-      await reload();
+      await refreshTransactionsAndBudgets();
       setActionNotice(
         `Se eliminaron ${deleted.transactions} movimientos y ${deleted.budgets} presupuestos de este mes.`
       );
@@ -141,7 +152,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
     setActionNotice(null);
     try {
       await financeService.updateBudget(budgetId, changes);
-      await reload();
+      await refreshBudgets();
       setActionNotice("Presupuesto actualizado.");
     } catch (caughtError) {
       setActionError(
@@ -156,7 +167,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
     setActionNotice(null);
     try {
       await financeService.deleteBudget(budgetId);
-      await reload();
+      await refreshBudgets();
       setActionNotice("Presupuesto eliminado.");
     } catch (caughtError) {
       setActionError(
@@ -182,7 +193,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
     return (
       <SurfaceCard className="space-y-3">
         <p className="text-sm text-destructive">{error}</p>
-        <Button type="button" variant="outline" onClick={() => void reload()}>
+        <Button type="button" variant="outline" onClick={() => void retry()}>
           Reintentar
         </Button>
       </SurfaceCard>
@@ -247,7 +258,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
                 <PersonalTransactionForm
                   initialType={transactionModalType}
                   onSaved={async () => {
-                    await reload();
+                    await refreshTransactionsAndBudgets();
                     setIsTransactionModalOpen(false);
                   }}
                 />
@@ -255,7 +266,7 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
                 <HouseholdTransactionForm
                   initialType={transactionModalType}
                   onSaved={async () => {
-                    await reload();
+                    await refreshTransactionsAndBudgets();
                     setIsTransactionModalOpen(false);
                   }}
                 />
@@ -279,20 +290,22 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
-                  {context === "personal" ? "Crear presupuesto personal" : "Crear presupuesto hogar"}
+                  {context === "personal"
+                    ? "Crear presupuesto personal"
+                    : "Crear presupuesto hogar"}
                 </DialogTitle>
               </DialogHeader>
               {context === "personal" ? (
                 <PersonalBudgetForm
                   onSaved={async () => {
-                    await reload();
+                    await refreshBudgets();
                     setIsBudgetModalOpen(false);
                   }}
                 />
               ) : (
                 <HouseholdBudgetForm
                   onSaved={async () => {
-                    await reload();
+                    await refreshBudgets();
                     setIsBudgetModalOpen(false);
                   }}
                 />
@@ -320,14 +333,14 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
               {context === "personal" ? (
                 <PersonalGoalForm
                   onSaved={async () => {
-                    await reload();
+                    await refreshGoals();
                     setIsGoalModalOpen(false);
                   }}
                 />
               ) : (
                 <SharedGoalForm
                   onSaved={async () => {
-                    await reload();
+                    await refreshGoals();
                     setIsGoalModalOpen(false);
                   }}
                 />
@@ -371,8 +384,8 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
           <AlertDialogHeader>
             <AlertDialogTitle>¿Mantener movimientos fijos?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se crearán copias de los ingresos y egresos fijos de este mes para los próximos
-              tres meses. No se duplicarán los movimientos ya programados.
+              Se crearán copias de los ingresos y egresos fijos de este mes para los próximos tres
+              meses. No se duplicarán los movimientos ya programados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -414,15 +427,14 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
         </AlertDialogContent>
       </AlertDialog>
 
-      <BalanceCard summary={summary} />
-      <GoalProgress goals={goals} month={month} onContributionSaved={reload} />
+      <BalanceCard summary={summary} transactions={transactions} />
+      <GoalProgress goals={goals} month={month} onContributionSaved={refreshGoals} />
       <FinancialAIAssistant
         summary={summary}
         transactions={transactions}
         context={context}
         month={month}
       />
-      <ExpenseChart transactions={transactions} />
       <TransactionList
         transactions={transactions}
         type="expense"
@@ -440,7 +452,10 @@ export function FinanceDashboard({ context, month }: { context: FinanceContext; 
       {context === "household" ? (
         <SurfaceCard className="space-y-3">
           <h3 className="text-sm font-semibold">Aportes del hogar</h3>
-          <ContributionManager householdProfile={householdProfile} onSaved={reload} />
+          <ContributionManager
+            householdProfile={householdProfile}
+            onSaved={refreshHouseholdProfile}
+          />
         </SurfaceCard>
       ) : null}
       {actionError ? (

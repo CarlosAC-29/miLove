@@ -9,7 +9,7 @@ import {
   HeadContent,
   Scripts
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -17,7 +17,10 @@ import { ThemeProvider } from "@/app/providers/ThemeProvider";
 import { DataLoadingIndicator } from "@/app/providers/DataLoadingIndicator";
 import { SlowRequestDialog } from "@/app/providers/SlowRequestDialog";
 import { BottomNavigation } from "@/widgets/BottomNavigation/BottomNavigation";
+import { HowItWorksDialog } from "@/widgets/HowItWorks/HowItWorksDialog";
 import { useAuthStore } from "@/stores/auth.store";
+
+const DEMO_GUIDE_STORAGE_KEY = "milove.demo.guide-seen";
 
 function NotFoundComponent() {
   return (
@@ -151,6 +154,7 @@ function RootComponent() {
   const isDemo = useAuthStore((state) => state.session?.isDemo === true);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const hydrateSession = useAuthStore((state) => state.hydrateSession);
+  const [isDemoGuideOpen, setIsDemoGuideOpen] = useState(false);
 
   useEffect(() => {
     hydrateSession();
@@ -176,6 +180,19 @@ function RootComponent() {
     void registerServiceWorker();
   }, []);
 
+  useEffect(() => {
+    if (!isDemo || typeof window === "undefined") return;
+    if (window.localStorage.getItem(DEMO_GUIDE_STORAGE_KEY)) return;
+    setIsDemoGuideOpen(true);
+  }, [isDemo]);
+
+  const handleDemoGuideOpenChange = (open: boolean) => {
+    setIsDemoGuideOpen(open);
+    if (!open && typeof window !== "undefined") {
+      window.localStorage.setItem(DEMO_GUIDE_STORAGE_KEY, "true");
+    }
+  };
+
   const showBottomNavigation = isAuthenticated && pathname !== "/login" && pathname !== "/register";
 
   return (
@@ -190,6 +207,7 @@ function RootComponent() {
           ) : null}
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
+          <HowItWorksDialog open={isDemoGuideOpen} onOpenChange={handleDemoGuideOpenChange} />
           {showBottomNavigation ? <BottomNavigation /> : null}
           <DataLoadingIndicator />
           <SlowRequestDialog />

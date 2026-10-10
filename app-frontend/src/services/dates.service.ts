@@ -18,7 +18,7 @@ export interface UpsertAppointmentInput {
   startAt: string;
 }
 
-const demoAppointments = createDemoStore<AppointmentDto>([
+const demoAppointments = createDemoStore<AppointmentDto>("milove.demo.appointments", [
   {
     id: "demo-date-1",
     title: "Picnic al atardecer",

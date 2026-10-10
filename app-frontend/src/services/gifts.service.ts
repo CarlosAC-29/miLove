@@ -18,7 +18,7 @@ export interface UpsertGiftInput {
   startAt: string;
 }
 
-const demoGifts = createDemoStore<GiftDto>([
+const demoGifts = createDemoStore<GiftDto>("milove.demo.gifts", [
   {
     id: "demo-gift-1",
     title: "Libro que quiere leer",

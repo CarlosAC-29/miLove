@@ -18,7 +18,7 @@ export interface UpsertRestaurantInput {
   startAt: string;
 }
 
-const demoRestaurants = createDemoStore<RestaurantDto>([
+const demoRestaurants = createDemoStore<RestaurantDto>("milove.demo.restaurants", [
   {
     id: "demo-restaurant-1",
     title: "Cena italiana",

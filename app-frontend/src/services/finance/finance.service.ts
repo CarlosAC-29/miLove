@@ -22,18 +22,19 @@ import {
   type HouseholdProfileDto
 } from "@/entities/finance-profile/types";
 import { MOCK_HOUSEHOLD_PROFILE } from "@/entities/finance-profile/mock/householdProfile.mock";
+import { createDemoState } from "@/services/demo/demo-store";
 
 /**
  * Estado en memoria del modo mock. Simula la base de datos del backend para
  * que las mutaciones se reflejen en la UI sin acoplar componentes a los mocks.
  */
-const memory = {
+const memory = createDemoState("milove.demo.finance", {
   transactions: [...MOCK_PERSONAL_TRANSACTIONS, ...MOCK_HOUSEHOLD_TRANSACTIONS] as TransactionDto[],
   budgets: [...MOCK_PERSONAL_BUDGETS, ...MOCK_HOUSEHOLD_BUDGETS] as BudgetDto[],
   goals: [...MOCK_GOALS] as GoalDto[],
   goalContributions: [] as Array<GoalContributionDto & { goalId: string }>,
   household: MOCK_HOUSEHOLD_PROFILE as HouseholdProfileDto
-};
+});
 
 export interface FinanceInsightDto {
   title: string;
